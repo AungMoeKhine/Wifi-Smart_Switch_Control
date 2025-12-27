@@ -1,80 +1,112 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-<title>Wifi-Smart_Switch_Control Web Installer</title>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<style>
-  body {
-    font-family: Arial, sans-serif;
-    text-align: center;
-    margin-top: 50px;
-    background-color: #f4f4f4;
-  }
-  h1 {
-    color: #333;
-  }
-  p {
-    color: #555;
-    max-width: 600px;
-    margin: 20px auto;
-  }
-  .container {
-    padding: 20px;
-    background-color: #fff;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    display: inline-block;
-  }
-  .logo {
-    width: 150px; /* Adjust size here */
-    height: auto;
-    border-radius: 50%; /* Makes the image a circle */
-    margin-bottom: 20px;
-  }
-  .button {
-    border: none;
-    color: white;
-    padding: 15px 32px;
-    text-align: center;
-    text-decoration: none;
-    display: inline-block;
-    font-size: 16px;
-    margin: 10px 2px;
-    cursor: pointer;
-    border-radius: 8px;
-    width: 250px; /* Ensures buttons have the same width */
-  }
-  .button-v1 {
-    background-color: #007bff; /* Blue */
-  }
-  /* Removed unused button styles */
-  .important-note {
-    font-weight: bold;
-    color: #D32F2F; /* Red */
-  }
-</style>
-<script type="module" src="https://unpkg.com/esp-web-tools@9/dist/web/install-button.js?module"></script>
+    <title>Wifi-Smart_Switch_Control Web Installer</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin-top: 50px;
+            background-color: #f4f4f4;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        p {
+            color: #555;
+            max-width: 600px;
+            margin: 20px auto;
+        }
+
+        .container {
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            display: inline-block;
+        }
+
+        .logo {
+            width: 150px;
+            /* Adjust size here */
+            height: auto;
+            border-radius: 50%;
+            /* Makes the image a circle */
+            margin-bottom: 20px;
+        }
+
+        .button {
+            border: none;
+            color: white;
+            padding: 15px 32px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 10px 2px;
+            cursor: pointer;
+            border-radius: 8px;
+            width: 250px;
+            /* Ensures buttons have the same width */
+        }
+
+        .button-v1 {
+            background-color: #007bff;
+            /* Blue */
+        }
+
+        /* Removed unused button styles */
+        .important-note {
+            font-weight: bold;
+            color: #D32F2F;
+            /* Red */
+        }
+    </style>
+    <script type="module" src="https://unpkg.com/esp-web-tools@9/dist/web/install-button.js?module"></script>
 </head>
+
 <body>
 
-<div class="container">
-  <!-- Ensure you have a logo.png in the same folder, or remove this line -->
-  <img src="logo.png" alt="Logo" class="logo">
+    <div class="container">
+        <!-- Ensure you have a logo.png in the same folder, or remove this line -->
+        <img src="logo.png" alt="Logo" class="logo">
 
-  <h1>Wifi-Smart_Switch_Control Web Installer</h1>
-  <p>This program was developed by <strong>Aung Moe Khine</strong>.</p>
-  <p>Connect your ESP32 to your computer with a USB cable, then click the button below to install the firmware. You must use a compatible browser like Google Chrome or Microsoft Edge.</p>
-  
-  <p class="important-note">Compatible with ESP32 Dev Module</p>
+        <h1>Wifi-Smart_Switch_Control Web Installer</h1>
 
-  <!-- Button for Firmware Installation -->
-  <!-- Check manifest.json is correct -->
-  <esp-web-install-button manifest="manifest.json">
-    <button slot="activate" class="button button-v1">CONNECT & INSTALL</button>
-  </esp-web-install-button>
+        <!-- Setup Guide Section -->
+        <div
+            style="text-align: left; background: #e3f2fd; padding: 20px; border-radius: 12px; margin: 25px auto; max-width: 550px; border: 1px solid #bbdefb; color: #0d47a1;">
+            <h3 style="margin-top: 0; display: flex; align-items: center;">🚀 Quick Setup Guide</h3>
+            <ol style="margin-bottom: 0; padding-left: 20px; line-height: 1.6;">
+                <li><strong>Install:</strong> Connect ESP32 via USB and click the <b>CONNECT</b> button below.</li>
+                <li><strong>Connect:</strong> After flashing, join WiFi <code>ESP32-Relay-Config</code> (Password:
+                    <code>12345678</code>).</li>
+                <li><strong>Configure:</strong> specific Open <a href="http://192.168.4.1"
+                        target="_blank">192.168.4.1</a> in your browser and enter your Home WiFi details.</li>
+                <li><strong>Control:</strong> The device will restart. You can then access it anytime at <a
+                        href="http://smart-switch.local" target="_blank">http://smart-switch-control.local</a>.</li>
+            </ol>
+        </div>
 
-</div>
+        <p>This program was developed by <strong>Aung Moe Khine</strong>.</p>
+        <p>Connect your ESP32 to your computer with a USB cable, then click the button below to install the firmware.
+            You must use a compatible browser like Google Chrome or Microsoft Edge.</p>
+
+        <p class="important-note">Compatible with ESP32 Dev Module</p>
+
+        <!-- Button for Firmware Installation -->
+        <!-- Check manifest.json is correct -->
+        <esp-web-install-button manifest="manifest.json">
+            <button slot="activate" class="button button-v1">CONNECT & INSTALL</button>
+        </esp-web-install-button>
+
+    </div>
 
 </body>
+
 </html>
