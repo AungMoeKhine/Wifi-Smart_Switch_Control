@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Wifi-Smart_Switch_Control Web Installer</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    margin-top: 50px;
+    background-color: #f4f4f4;
+  }
+  h1 {
+    color: #333;
+  }
+  p {
+    color: #555;
+    max-width: 600px;
+    margin: 20px auto;
+  }
+  .container {
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    display: inline-block;
+  }
+  .logo {
+    width: 150px; /* Adjust size here */
+    height: auto;
+    border-radius: 50%; /* Makes the image a circle */
+    margin-bottom: 20px;
+  }
+  .button {
+    border: none;
+    color: white;
+    padding: 15px 32px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 10px 2px;
+    cursor: pointer;
+    border-radius: 8px;
+    width: 250px; /* Ensures buttons have the same width */
+  }
+  .button-v1 {
+    background-color: #007bff; /* Blue */
+  }
+  /* Removed unused button styles */
+  .important-note {
+    font-weight: bold;
+    color: #D32F2F; /* Red */
+  }
+</style>
+<script type="module" src="https://unpkg.com/esp-web-tools@9/dist/web/install-button.js?module"></script>
+</head>
+<body>
+
+<div class="container">
+  <!-- Ensure you have a logo.png in the same folder, or remove this line -->
+  <img src="logo.png" alt="Logo" class="logo">
+
+  <h1>Wifi-Smart_Switch_Control Web Installer</h1>
+  <p>This program was developed by <strong>Aung Moe Khine</strong>.</p>
+  <p>Connect your ESP32 to your computer with a USB cable, then click the button below to install the firmware. You must use a compatible browser like Google Chrome or Microsoft Edge.</p>
+  
+  <p class="important-note">Compatible with ESP32 Dev Module</p>
+
+  <!-- Button for Firmware Installation -->
+  <!-- Check manifest.json is correct -->
+  <esp-web-install-button manifest="manifest.json">
+    <button slot="activate" class="button button-v1">CONNECT & INSTALL</button>
+  </esp-web-install-button>
+
+</div>
+
+</body>
+</html>
