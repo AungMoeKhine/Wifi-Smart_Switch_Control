@@ -1,7 +1,6 @@
 # Wifi-Smart_Switch_Control
 
-/*
-===========================================
+   ===========================================
  * PROJECT: ESP32 4-Channel Smart Switch with Timer & Schedule
  * ===========================================
  * 
@@ -28,7 +27,7 @@
  * - Preferences.h (Standard ESP32 lib for storage)
  * - ESPmDNS.h (For resolving .local names)
  * ===========================================
- */
+
 
 🔥 New Project Release: 4-Channel ESP32 Web Controller
 
