@@ -150,11 +150,18 @@
         </p>
 
         <!-- Button for Firmware Installation -->
-        <esp-web-install-button manifest="manifest.json">
+        <esp-web-install-button manifest="installer_manifest.json">
             <button slot="activate" class="button button-v1">CONNECT & INSTALL</button>
         </esp-web-install-button>
 
         <p style="font-size: 0.9rem; color: #888;">Compatible with ESP32 Dev Module. Connect via USB.</p>
+
+        <!-- Link to Cloud App -->
+        <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #eee;">
+            <p>Already installed? Access the Cloud Dashboard:</p>
+            <a href="cloud_control.html" class="button" style="background-color: #28a745; max-width: 250px;">OPEN CLOUD
+                APP</a>
+        </div>
 
         <div class="grid-container">
 
@@ -305,6 +312,15 @@
                             vertical-align: middle;
                             position: relative;
                         }
+
+                        .wire-gnd {
+                            background: #455a64;
+                            border-bottom: 2px dashed #90a4ae;
+                            height: 0;
+                            width: 30px;
+                        }
+
+                        /* Dashed for GND? No simple line */
 
                         .wire-dot {
                             width: 6px;
