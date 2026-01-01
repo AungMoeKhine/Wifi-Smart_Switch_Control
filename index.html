@@ -196,26 +196,395 @@
             <!-- Wiring Guide -->
             <div class="card" style="background: #f1f8e9; border-color: #c5e1a5; grid-column: 1 / -1;">
                 <h3>🔌 Wiring Guide</h3>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                    <div>
-                        <strong>Relays (Right Side)</strong>
-                        <ul style="list-style: none; padding: 0;">
-                            <li>R1: <code>GPIO 23</code> | R2: <code>GPIO 22</code></li>
-                            <li>R3: <code>GPIO 21</code> | R4: <code>GPIO 19</code></li>
-                            <li>R5: <code>GPIO 18</code> | R6: <code>GPIO 05</code></li>
-                            <li>R7: <code>GPIO 17</code> | R8: <code>GPIO 16</code></li>
-                        </ul>
-                    </div>
-                    <div>
-                        <strong>Buttons (Left Side)</strong>
-                        <ul style="list-style: none; padding: 0;">
-                            <li>B1: <code>GPIO 32</code> | B2: <code>GPIO 33</code></li>
-                            <li>B3: <code>GPIO 25</code> | B4: <code>GPIO 26</code></li>
-                            <li>B5: <code>GPIO 27</code> | B6: <code>GPIO 14</code></li>
-                            <li>B7: <code>GPIO 13</code> | B8: <code>GPIO 04</code></li>
-                        </ul>
-                    </div>
+
+                <!-- Wiring Diagram (HTML/CSS Version) -->
+                <div
+                    style="overflow-x: auto; background: white; padding: 20px; border-radius: 12px; border: 1px solid #e1e4e8; text-align: center; margin-bottom: 25px;">
+                    <style>
+                        .wiring-table {
+                            margin: 0 auto;
+                            border-spacing: 0;
+                            border-collapse: separate;
+                            font-family: monospace;
+                            font-size: 14px;
+                        }
+
+                        .wiring-table td {
+                            padding: 4px 5px;
+                            vertical-align: middle;
+                            height: 32px;
+                            white-space: nowrap;
+                        }
+
+                        /* Component Boxes */
+                        .comp-btn {
+                            background: #fff9c4;
+                            border: 2px solid #fbc02d;
+                            color: #f57f17;
+                            border-radius: 6px;
+                            font-weight: bold;
+                            padding: 6px 10px;
+                            display: inline-block;
+                            width: 85px;
+                            text-align: center;
+                            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+                        }
+
+                        .comp-relay {
+                            background: #ffebee;
+                            border: 2px solid #c62828;
+                            color: #c62828;
+                            border-radius: 6px;
+                            font-weight: bold;
+                            padding: 6px 10px;
+                            display: inline-block;
+                            width: 85px;
+                            text-align: center;
+                            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+                        }
+
+                        /* ESP32 Board Styles */
+                        .board-body-left {
+                            background: #263238;
+                            color: #ffffff;
+                            text-align: left;
+                            border-left: 2px solid #37474f;
+                            padding-left: 15px;
+                            width: 80px;
+                            font-family: Consolas, monospace;
+                        }
+
+                        .board-body-right {
+                            background: #263238;
+                            color: #ffffff;
+                            text-align: right;
+                            border-right: 2px solid #37474f;
+                            padding-right: 15px;
+                            width: 80px;
+                            font-family: Consolas, monospace;
+                        }
+
+                        .pin-gnd {
+                            color: #bdbdbd;
+                            font-weight: bold;
+                        }
+
+                        .pin-pwr {
+                            color: #f44336;
+                            font-weight: bold;
+                        }
+
+                        .pin-gpio {
+                            color: #ffffff;
+                            font-weight: bold;
+                        }
+
+                        .board-header {
+                            background: #37474f;
+                            color: white;
+                            text-align: center;
+                            font-weight: bold;
+                            padding: 10px;
+                            font-size: 1.1em;
+                            letter-spacing: 1px;
+                            border-radius: 8px 8px 0 0;
+                        }
+
+                        .board-footer {
+                            background: #37474f;
+                            height: 12px;
+                            border-radius: 0 0 8px 8px;
+                        }
+
+                        /* Connectors */
+                        .wire-line {
+                            height: 2px;
+                            background: #cfd8dc;
+                            width: 20px;
+                            display: inline-block;
+                            vertical-align: middle;
+                            position: relative;
+                        }
+
+                        .wire-dot {
+                            width: 6px;
+                            height: 6px;
+                            background: #b0bec5;
+                            border-radius: 50%;
+                            position: absolute;
+                            top: -2px;
+                        }
+
+                        .dot-left {
+                            right: 0;
+                        }
+
+                        .dot-right {
+                            left: 0;
+                        }
+
+                        /* Common Rail */
+                        .common-rail {
+                            background: #546e7a;
+                            color: white;
+                            writing-mode: vertical-rl;
+                            text-orientation: mixed;
+                            border-radius: 4px;
+                            font-weight: bold;
+                            letter-spacing: 2px;
+                            padding: 10px 4px;
+                            box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
+                        }
+                    </style>
+
+                    <table class="wiring-table">
+                        <!-- Top Header -->
+                        <tr>
+                            <td></td> <!-- GND Rail Spacer -->
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td colspan="2" class="board-header">ESP32 BOARD</td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td> <!-- (-) Rail Spacer -->
+                        </tr>
+
+                        <!-- R1 / B1 -->
+                        <tr>
+                            <td rowspan="8" class="common-rail">COMMON GND</td>
+                            <td>
+                                <div class="wire-line" style="width:15px; background:#b0bec5;"></div>
+                            </td>
+                            <td>
+                                <div class="comp-btn">🔘 B1</div>
+                            </td>
+                            <td>
+                                <div class="wire-line">
+                                    <div class="wire-dot dot-left"></div>
+                                </div>
+                            </td>
+                            <td class="board-body-left">GPIO 32</td>
+                            <td class="board-body-right">GPIO 23</td>
+                            <td>
+                                <div class="wire-line">
+                                    <div class="wire-dot dot-right"></div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="comp-relay">🔌 Relay 1</div>
+                            </td>
+                            <td>
+                                <div class="wire-line" style="width:15px; background:#b0bec5;"></div>
+                            </td>
+                            <td rowspan="8" class="common-rail">COMMON (-)</td>
+                        </tr>
+                        <!-- R2 / B2 -->
+                        <tr>
+                            <td>
+                                <div class="wire-line" style="width:15px; background:#b0bec5;"></div>
+                            </td>
+                            <td>
+                                <div class="comp-btn">🔘 B2</div>
+                            </td>
+                            <td>
+                                <div class="wire-line">
+                                    <div class="wire-dot dot-left"></div>
+                                </div>
+                            </td>
+                            <td class="board-body-left">GPIO 33</td>
+                            <td class="board-body-right">GPIO 22</td>
+                            <td>
+                                <div class="wire-line">
+                                    <div class="wire-dot dot-right"></div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="comp-relay">🔌 Relay 2</div>
+                            </td>
+                            <td>
+                                <div class="wire-line" style="width:15px; background:#b0bec5;"></div>
+                            </td>
+                        </tr>
+                        <!-- R3 / B3 -->
+                        <tr>
+                            <td>
+                                <div class="wire-line" style="width:15px; background:#b0bec5;"></div>
+                            </td>
+                            <td>
+                                <div class="comp-btn">🔘 B3</div>
+                            </td>
+                            <td>
+                                <div class="wire-line">
+                                    <div class="wire-dot dot-left"></div>
+                                </div>
+                            </td>
+                            <td class="board-body-left">GPIO 25</td>
+                            <td class="board-body-right">GPIO 21</td>
+                            <td>
+                                <div class="wire-line">
+                                    <div class="wire-dot dot-right"></div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="comp-relay">🔌 Relay 3</div>
+                            </td>
+                            <td>
+                                <div class="wire-line" style="width:15px; background:#b0bec5;"></div>
+                            </td>
+                        </tr>
+                        <!-- R4 / B4 -->
+                        <tr>
+                            <td>
+                                <div class="wire-line" style="width:15px; background:#b0bec5;"></div>
+                            </td>
+                            <td>
+                                <div class="comp-btn">🔘 B4</div>
+                            </td>
+                            <td>
+                                <div class="wire-line">
+                                    <div class="wire-dot dot-left"></div>
+                                </div>
+                            </td>
+                            <td class="board-body-left">GPIO 26</td>
+                            <td class="board-body-right">GPIO 19</td>
+                            <td>
+                                <div class="wire-line">
+                                    <div class="wire-dot dot-right"></div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="comp-relay">🔌 Relay 4</div>
+                            </td>
+                            <td>
+                                <div class="wire-line" style="width:15px; background:#b0bec5;"></div>
+                            </td>
+                        </tr>
+                        <!-- R5 / B5 -->
+                        <tr>
+                            <td>
+                                <div class="wire-line" style="width:15px; background:#b0bec5;"></div>
+                            </td>
+                            <td>
+                                <div class="comp-btn">🔘 B5</div>
+                            </td>
+                            <td>
+                                <div class="wire-line">
+                                    <div class="wire-dot dot-left"></div>
+                                </div>
+                            </td>
+                            <td class="board-body-left">GPIO 27</td>
+                            <td class="board-body-right">GPIO 18</td>
+                            <td>
+                                <div class="wire-line">
+                                    <div class="wire-dot dot-right"></div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="comp-relay">🔌 Relay 5</div>
+                            </td>
+                            <td>
+                                <div class="wire-line" style="width:15px; background:#b0bec5;"></div>
+                            </td>
+                        </tr>
+                        <!-- R6 / B6 -->
+                        <tr>
+                            <td>
+                                <div class="wire-line" style="width:15px; background:#b0bec5;"></div>
+                            </td>
+                            <td>
+                                <div class="comp-btn">🔘 B6</div>
+                            </td>
+                            <td>
+                                <div class="wire-line">
+                                    <div class="wire-dot dot-left"></div>
+                                </div>
+                            </td>
+                            <td class="board-body-left">GPIO 14</td>
+                            <td class="board-body-right">GPIO 05</td>
+                            <td>
+                                <div class="wire-line">
+                                    <div class="wire-dot dot-right"></div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="comp-relay">🔌 Relay 6</div>
+                            </td>
+                            <td>
+                                <div class="wire-line" style="width:15px; background:#b0bec5;"></div>
+                            </td>
+                        </tr>
+                        <!-- R7 / B7 -->
+                        <tr>
+                            <td>
+                                <div class="wire-line" style="width:15px; background:#b0bec5;"></div>
+                            </td>
+                            <td>
+                                <div class="comp-btn">🔘 B7</div>
+                            </td>
+                            <td>
+                                <div class="wire-line">
+                                    <div class="wire-dot dot-left"></div>
+                                </div>
+                            </td>
+                            <td class="board-body-left">GPIO 13</td>
+                            <td class="board-body-right">GPIO 17</td>
+                            <td>
+                                <div class="wire-line">
+                                    <div class="wire-dot dot-right"></div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="comp-relay">🔌 Relay 7</div>
+                            </td>
+                            <td>
+                                <div class="wire-line" style="width:15px; background:#b0bec5;"></div>
+                            </td>
+                        </tr>
+                        <!-- R8 / B8 -->
+                        <tr>
+                            <td>
+                                <div class="wire-line" style="width:15px; background:#b0bec5;"></div>
+                            </td>
+                            <td>
+                                <div class="comp-btn">🔘 B8</div>
+                            </td>
+                            <td>
+                                <div class="wire-line">
+                                    <div class="wire-dot dot-left"></div>
+                                </div>
+                            </td>
+                            <td class="board-body-left">GPIO 04</td>
+                            <td class="board-body-right">GPIO 16</td>
+                            <td>
+                                <div class="wire-line">
+                                    <div class="wire-dot dot-right"></div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="comp-relay">🔌 Relay 8</div>
+                            </td>
+                            <td>
+                                <div class="wire-line" style="width:15px; background:#b0bec5;"></div>
+                            </td>
+                        </tr>
+
+                        <!-- Footer -->
+                        <tr>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td colspan="2" class="board-footer"></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                    </table>
                 </div>
+
             </div>
 
         </div>
