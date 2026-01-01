@@ -7,7 +7,7 @@
             "chipFamily": "ESP32",
             "parts": [
                 {
-                    "path": "Wi_Fi_Control_Switch_License_8_Channel.ino.merged.bin",
+                    "path": "Wi_Fi_Control_Switch_License_8_Channel_MQTT.ino.merged.bin",
                     "offset": 0
                 }
             ]
