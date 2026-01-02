@@ -1,16 +1,20 @@
 {
-  "name": "Wifi-Smart-Switch_Control",
-  "version": "1.0",
-  "new_install_prompt_erase": true,
-  "builds": [
+  "name": "AMK Smart Switch",
+  "short_name": "Smart Switch",
+  "start_url": "cloud_control.html",
+  "display": "standalone",
+  "background_color": "#f8f9fa",
+  "theme_color": "#007bff",
+  "icons": [
     {
-      "chipFamily": "ESP32",
-      "parts": [
-        {
-          "path": "Wi_Fi_Control_Switch_Secure_v2.ino.merged.bin",
-          "offset": 0
-        }
-      ]
+      "src": "https://cdn-icons-png.flaticon.com/512/3680/3680321.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/3680/3680321.png",
+      "sizes": "512x512",
+      "type": "image/png"
     }
   ]
 }
