@@ -9,7 +9,7 @@
  * Wi-Fi credentials, and relay states even after a power failure.
  * 
  * KEY FEATURES:
- * 1. Web Interface: Control 4 relays, set timers, and configure schedules via browser.
+ * 1. Web Interface: Control 8 relays, set timers, and configure schedules via browser.
  * 2. Physical Controls: Support for 8 physical push buttons with software debouncing.
  * 3. Persistence: Remembers Relay State, WiFi Creds, and Schedules after reboot.
  * 4. Smart Timer: Resumes countdown after power loss (if time sync is successful).
