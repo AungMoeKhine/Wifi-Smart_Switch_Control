@@ -7,11 +7,10 @@
             "chipFamily": "ESP32",
             "parts": [
                 {
-                    "path": "Wi_Fi_Control_Switch_Secure_v2.ino.merged.bin",
+                    "path": "firmware.bin",
                     "offset": 0
                 }
             ]
         }
     ]
-
 }
