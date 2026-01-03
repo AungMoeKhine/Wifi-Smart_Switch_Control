@@ -531,7 +531,18 @@
             document.getElementById('infoStatus').innerText = "Connected";
             document.getElementById('infoTime').innerText = devInfo.time;
             document.getElementById('infoIp').innerText = devInfo.ip;
-            document.getElementById('infoWifi').innerText = devInfo.wifi ? "Connected" : "No WiFi";
+            let w = devInfo.wifi;
+            let wText = "No WiFi";
+            if (w) {
+                if (w < 0) { 
+                    // RSSI Value (e.g. -65)
+                    let qual = Math.min(Math.max(2 * (w + 100), 0), 100);
+                    wText = `${qual}% (${w} dBm)`;
+                } else {
+                    wText = "Connected";
+                }
+            }
+            document.getElementById('infoWifi').innerText = wText;
 
             let expText = devInfo.expired ? "EXPIRED" : (devInfo.daysLeft + " Days Left");
             let expCol = devInfo.expired ? "red" : "green";
