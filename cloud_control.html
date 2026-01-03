@@ -698,6 +698,25 @@
 
         function pad(n) { return (n < 10 ? '0' : '') + n; }
 
+        // --- DYNAMIC TIMER COUNTDOWN ---
+        setInterval(() => {
+            let needsUpdate = false;
+            // Iterate over all 8 channels
+            for(let i=0; i<8; i++) {
+                if(timerRem[i] > 0) {
+                    timerRem[i]--; // Decrement local counter
+                    needsUpdate = true;
+                    // If it hit 0 locally, we can optionally wait for server confirmation 
+                    // or just show OFF. The UI logic handles 0 as OFF.
+                }
+            }
+            if(needsUpdate) {
+                updateHomeUI(); // Refresh badges (5m -> 4m etc)
+                
+                // Also refresh Timer Presets if Start/Stop buttons depend on status
+                if(window.timerPresets) renderTimers(); 
+            }
+        }, 1000);
     </script>
 </body>
 
