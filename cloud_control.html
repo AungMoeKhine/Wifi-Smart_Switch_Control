@@ -353,7 +353,8 @@
 
                 <label class="input-label">Extend License (Paste Key)</label>
                 <input type="text" id="licInput" class="full-width" placeholder="Paste license text here...">
-                <button class="action-btn" onclick="submitLic()" style="background:#28a745;">Activate License</button>
+                <button class="action-btn" onclick="submitLic()" id="btnLic" style="background:#28a745;">Activate
+                    License</button>
             </div>
         </div>
 
@@ -361,6 +362,76 @@
 
     <script>
         let client;
+        // ... (existing vars) ...
+
+        // ... (skipping unchanged parts until updateInfoUI) ...
+
+        function updateInfoUI() {
+            document.getElementById('infoStatus').innerText = "Connected";
+            document.getElementById('infoTime').innerText = devInfo.time;
+            document.getElementById('infoIp').innerText = devInfo.ip;
+            let w = devInfo.wifi;
+            let wText = "No WiFi";
+            if (w) {
+                if (w < 0) {
+                    // RSSI Value (e.g. -65)
+                    let qual = Math.min(Math.max(2 * (w + 100), 0), 100);
+                    wText = `${qual}% (${w} dBm)`;
+                } else {
+                    wText = "Connected";
+                }
+            }
+            document.getElementById('infoWifi').innerText = wText;
+
+            let expText = devInfo.expired ? "EXPIRED" : (devInfo.daysLeft + " Days Left");
+            let expCol = devInfo.expired ? "red" : "green";
+            document.getElementById('infoLic').innerHTML = `<span style="color:${expCol}; font-weight:bold;">${expText}</span>`;
+
+            // Logic for Banners
+            if (devInfo.expired) {
+                document.getElementById('expiryBanner').style.display = 'block';
+                document.getElementById('warnBanner').style.display = 'none';
+                setExpiryLock(true);
+            } else if (devInfo.daysLeft <= 7 && devInfo.daysLeft >= 0) {
+                document.getElementById('expiryBanner').style.display = 'none';
+                document.getElementById('warnBanner').style.display = 'block';
+                document.getElementById('warnMsg').innerText = devInfo.daysLeft + " days remaining.";
+                setExpiryLock(false);
+            } else {
+                document.getElementById('expiryBanner').style.display = 'none';
+                document.getElementById('warnBanner').style.display = 'none';
+                setExpiryLock(false);
+            }
+        }
+
+        function setExpiryLock(expired) {
+            // Disable all interactive elements
+            const els = document.querySelectorAll('button, input, select');
+            els.forEach(el => {
+                // EXEMPTIONS:
+                // 1. Navigation Tabs (to switch between Home/Settings)
+                if (el.classList.contains('tab-btn')) return;
+                // 2. License Input
+                if (el.id === 'licInput') return;
+                // 3. License Submit Button
+                if (el.id === 'btnLic') return;
+
+                // Login screen inputs should not be locked by this status logic ideally because they are hidden,
+                // but just in case:
+                if (el.classList.contains('login') || el.id === 'deviceIdInput' || el.id === 'devicePinInput') return;
+
+                el.disabled = expired;
+                if (expired) {
+                    el.style.opacity = "0.5";
+                    el.style.cursor = "not-allowed";
+                } else {
+                    el.style.opacity = "1";
+                    el.style.cursor = "pointer";
+                    if (el.tagName === 'INPUT') el.style.cursor = "text";
+                }
+            });
+        }
+
         let deviceId;
         const mqtt_broker = "210195b635414206adcd944325fe6f59.s1.eu.hivemq.cloud";
         const mqtt_port = 8884; // SSL Port
