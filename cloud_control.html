@@ -277,6 +277,18 @@
             <h1 style="font-size:1.5rem; margin:10px 0 5px; color:#333;">Smart Cloud Control</h1>
             <div id="connectionStatus" class="disconnected">Disconnected</div>
         </div>
+        
+        <!-- Validity Banner -->
+        <div id="expiryBanner" style="display:none; background:#dc3545; color:white; padding:15px; border-radius:12px; margin-bottom:15px; font-weight:bold; max-width: 450px; margin: 0 auto 15px auto;">
+            ⚠️ CLOUD SERVICES EXPIRED ⚠️<br>
+            <span style="font-size:0.8rem; font-weight:normal">Remote control features are disabled. Local Wi-Fi control remains active.</span>
+        </div>
+
+        <!-- Warning Banner -->
+        <div id="warnBanner" style="display:none; background:#ffc107; color:#333; padding:15px; border-radius:12px; margin-bottom:15px; font-weight:bold; max-width: 450px; margin: 0 auto 15px auto;">
+            ⚠️ SUBSCRIPTION ENDING SOON ⚠️<br>
+            <span style="font-size:0.8rem; font-weight:normal" id="warnMsg">Renew soon.</span>
+        </div>
 
         <div class="tab-nav">
             <button class="tab-btn active" onclick="showTab('home')">🏠 Home</button>
@@ -547,6 +559,18 @@
             let expText = devInfo.expired ? "EXPIRED" : (devInfo.daysLeft + " Days Left");
             let expCol = devInfo.expired ? "red" : "green";
             document.getElementById('infoLic').innerHTML = `<span style="color:${expCol}; font-weight:bold;">${expText}</span>`;
+            
+            // Logic for Banners
+            if(devInfo.expired) {
+                document.getElementById('expiryBanner').style.display = 'block';
+                document.getElementById('warnBanner').style.display = 'none';
+            } else if(devInfo.daysLeft <= 7 && devInfo.daysLeft >= 0) {
+                 document.getElementById('warnBanner').style.display = 'block';
+                 document.getElementById('warnMsg').innerText = devInfo.daysLeft + " days remaining.";
+            } else {
+                 document.getElementById('expiryBanner').style.display = 'none';
+                 document.getElementById('warnBanner').style.display = 'none';
+            }
         }
 
         function sendCmd(payload) {
