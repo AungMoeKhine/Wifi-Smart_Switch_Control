@@ -651,17 +651,21 @@
 
         function sendCmd(payload) {
             if (!client || !client.isConnected()) return;
-            payload['pin'] = savedPin;
+            // payload['pin'] = savedPin; // Duplicate line removed
             payload["pin"] = savedPin; // Secure PIN Injection
             let msg = new Paho.MQTT.Message(JSON.stringify(payload));
             msg.destinationName = "smartswitch/" + deviceId + "/set";
             client.send(msg);
         }
 
-        function toggle(i) { sendCmd({ "toggle": i }); }
+        function toggle(i) {
+            if (devInfo.expired) { alert("License Expired. Remote control disabled."); return; }
+            sendCmd({ "toggle": i });
+        }
 
         // Settings Logic
         function saveContextLabels() {
+            if (devInfo.expired) { alert("License Expired. Remote control disabled."); return; }
             let payload = {};
             for (let i = 0; i < 8; i++) {
                 payload[String(i)] = document.getElementById('inpLbl' + i).value.substring(0, 15); // Max 15 chars
@@ -671,12 +675,14 @@
         }
 
         function saveTz() {
+            if (devInfo.expired) { alert("License Expired. Remote control disabled."); return; }
             let val = document.getElementById('tzSelect').value;
             sendCmd({ "tz": parseInt(val) });
             alert("Timezone Sent!");
         }
 
         function submitLic() {
+            // ALWAYS ALLOWED
             let val = document.getElementById('licInput').value.trim();
             if (val.length < 5) return;
             sendCmd({ "lic": val });
@@ -717,6 +723,7 @@
         }
 
         function editTimerMin(i, oldMin) {
+            if (devInfo.expired) { alert("License Expired. Remote control disabled."); return; }
             let newMin = prompt("Enter Timer Duration (minutes):", oldMin);
             if (newMin && !isNaN(newMin)) {
                 let m = parseInt(newMin);
@@ -729,9 +736,16 @@
             }
         }
 
-        function runTimer(min, mask) { sendCmd({ "timerReq": { "min": min, "mask": mask } }); }
-        function stopTimer(mask) { sendCmd({ "stopTimer": { "mask": mask } }); }
+        function runTimer(min, mask) {
+            if (devInfo.expired) { alert("License Expired. Remote control disabled."); return; }
+            sendCmd({ "timerReq": { "min": min, "mask": mask } });
+        }
+        function stopTimer(mask) {
+            if (devInfo.expired) { alert("License Expired. Remote control disabled."); return; }
+            sendCmd({ "stopTimer": { "mask": mask } });
+        }
         function saveTimer(i, min, mask, en) {
+            if (devInfo.expired) { alert("License Expired. Remote control disabled."); return; }
             sendCmd({ "timerSave": { "i": i, "min": min, "mask": mask, "en": en ? 1 : 0 } });
         }
 
@@ -754,13 +768,18 @@
             document.getElementById('scheduleList').innerHTML = html || "<p style='color:#777'>No schedules.</p>";
         }
 
-        function toggleSchedGlobal() { sendCmd({ "schedGlobal": document.getElementById('schedMaster').checked ? 1 : 0 }); }
+        function toggleSchedGlobal() {
+            if (devInfo.expired) { alert("License Expired. Remote control disabled."); return; }
+            sendCmd({ "schedGlobal": document.getElementById('schedMaster').checked ? 1 : 0 });
+        }
 
         function saveSched(i, sH, sM, eH, eM, m, on) {
+            if (devInfo.expired) { alert("License Expired. Remote control disabled."); return; }
             sendCmd({ "schedSave": { "i": i, "sH": sH, "sM": sM, "eH": eH, "eM": eM, "m": m, "on": on ? 1 : 0 } });
         }
 
         function editSched(i) {
+            if (devInfo.expired) { alert("License Expired. Remote control disabled."); return; }
             let s = schedules[i];
             let newS = prompt("Start HH:MM", pad(s.sH) + ":" + pad(s.sM));
             if (!newS) return;
