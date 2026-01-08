@@ -580,10 +580,15 @@
                     }
 
                     updateHomeUI();
-                    updateInfoUI();
+                    // updateInfoUI(); // Moved to end
                 }
                 if (data.timers) { timerPresets = data.timers; renderTimers(); }
                 if (data.schedules) { schedules = data.schedules; globalSchedActive = (data.sActive == 1); renderSchedules(); }
+
+                // Always update Info/Lock UI LAST to ensure any re-rendered elements (like timers) get locked
+                if (data.states || data.expired !== undefined) {
+                    updateInfoUI();
+                }
 
             } catch (e) { console.error(e); }
         }
