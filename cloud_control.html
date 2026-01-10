@@ -712,12 +712,15 @@
                     actionBtn = `<button class="action-btn" style="background:#ccc; cursor:not-allowed; opacity:0.6" onclick="alert('Please enable this timer first.')">START</button>`;
                 }
 
-                // Interactive edit: clicking the specific Minute text triggers edit
-                let editHtml = `<b onclick="editTimerMin(${i}, ${t.min})" style="cursor:pointer; border-bottom:1px dashed #666; font-size:1.1rem;">${t.min}m ✎</b>`;
-
                 html += `<div class="sched-item" style="opacity:${t.enabled ? 1 : 0.6}">
              <div style="display:flex; justify-content:space-between; margin-bottom:5px; align-items:center;">
-                <div style="display:flex; align-items:center; gap:5px;">${editHtml} Timer</div>
+                <div style="display:flex; align-items:center; gap:5px;">
+                    <div style="display:flex; align-items:center; gap:5px;">
+                        <span>Run for</span>
+                        <input type="number" value="${t.min}" onchange="saveTimer(${i}, this.value, ${t.mask}, ${t.enabled})" style="width:60px; padding:4px; border-radius:4px; border:1px solid #ccc; text-align:center;" min="1">
+                        <span>mins</span>
+                    </div>
+                </div>
                 <input type="checkbox" ${t.enabled ? 'checked' : ''} onchange="saveTimer(${i}, ${t.min}, ${t.mask}, this.checked)">
              </div>
              ${renderRelayMask(t.mask, (val) => saveTimer(i, t.min, val, t.enabled))}
@@ -758,19 +761,36 @@
             document.getElementById('schedMaster').checked = globalSchedActive;
             let html = "";
             schedules.forEach((s, i) => {
-                let timeStr = pad(s.sH) + ":" + pad(s.sM) + " ➜ " + pad(s.eH) + ":" + pad(s.eM);
+                let sTime = pad(s.sH) + ":" + pad(s.sM);
+                let eTime = pad(s.eH) + ":" + pad(s.eM);
+
                 html += `<div class="sched-item" style="opacity:${s.on ? 1 : 0.6}">
              <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
-                <b>${timeStr}</b>
+                <div style="display:flex; gap:5px; align-items:center;">
+                     <input type="time" value="${sTime}" onchange="updateSchedTime(${i}, 's', this.value)" style="border:1px solid #ddd; border-radius:4px; padding:2px;">
+                     <span>to</span>
+                     <input type="time" value="${eTime}" onchange="updateSchedTime(${i}, 'e', this.value)" style="border:1px solid #ddd; border-radius:4px; padding:2px;">
+                </div>
                 <input type="checkbox" ${s.on ? 'checked' : ''} onchange="saveSched(${i}, ${s.sH},${s.sM},${s.eH},${s.eM},${s.m}, this.checked)">
              </div>
              ${renderRelayMask(s.m, (val) => saveSched(i, s.sH, s.sM, s.eH, s.eM, val, s.on))}
-             <div style="font-size:0.8rem; text-align:center; margin-top:5px;">
-                <button onclick="editSched(${i})" style="border:1px solid #ddd; background:#fff; border-radius:4px; cursor:pointer; padding:2px 8px;">Edit Time</button>
-             </div>
           </div>`;
             });
             document.getElementById('scheduleList').innerHTML = html || "<p style='color:#777'>No schedules.</p>";
+        }
+
+        function updateSchedTime(i, type, val) {
+            let s = schedules[i];
+            let parts = val.split(':');
+            if (parts.length < 2) return;
+
+            let h = parseInt(parts[0]);
+            let m = parseInt(parts[1]);
+
+            if (type === 's') { s.sH = h; s.sM = m; }
+            else { s.eH = h; s.eM = m; }
+
+            saveSched(i, s.sH, s.sM, s.eH, s.eM, s.m, s.on);
         }
 
         function toggleSchedGlobal() {
@@ -782,6 +802,8 @@
             if (devInfo.expired) { alert("License Expired. Remote control disabled."); return; }
             sendCmd({ "schedSave": { "i": i, "sH": sH, "sM": sM, "eH": eH, "eM": eM, "m": m, "on": on ? 1 : 0 } });
         }
+
+        function pad(n) { return (n < 10 ? '0' : '') + n; }
 
         function editSched(i) {
             if (devInfo.expired) { alert("License Expired. Remote control disabled."); return; }
