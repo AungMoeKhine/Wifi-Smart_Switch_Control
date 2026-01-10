@@ -528,18 +528,45 @@
 
         function onConnect() {
             let s = document.getElementById('connectionStatus');
-            s.innerText = "Connected to Cloud"; s.className = "connected";
+            s.innerText = "Connected to Cloud";
+            s.className = "connected";
+            s.style.color = "#28a745"; // Restore Green color
             client.subscribe("smartswitch/" + deviceId + "/status");
             setTimeout(() => { sendCmd({ "get": 1 }); }, 500);
         }
         function onFail(e) {
-            alert("Connection Failed. Check Settings.");
-            document.getElementById('loginCard').style.display = 'block';
-            document.getElementById('connStatus').style.display = 'none';
+            console.log("Connection Failed: " + e.errorMessage);
+            // If we were already logged in (control panel visible), just keep trying
+            if (document.getElementById('controlPanel').style.display === 'block') {
+                let s = document.getElementById('connectionStatus');
+                if (s) s.innerText = "Retrying...";
+                setTimeout(() => {
+                    client.connect({ onSuccess: onConnect, onFailure: onFail, useSSL: true, userName: mqtt_user, password: mqtt_pass });
+                }, 5000);
+            } else {
+                // Initial login failure
+                alert("Connection Failed. Check Settings.");
+                document.getElementById('loginCard').style.display = 'block';
+                document.getElementById('connStatus').style.display = 'none';
+            }
         }
         function onConnectionLost(r) {
             if (r.errorCode != 0) {
-                console.log("Connection Lost");
+                console.log("Connection Lost: " + r.errorMessage);
+                let s = document.getElementById('connectionStatus');
+                if (s) {
+                    s.innerText = "Reconnecting...";
+                    s.className = "disconnected";
+                    s.style.color = "#fd7e14"; // Orange warning color
+                }
+
+                // Attempt Reconnect after 3 seconds
+                setTimeout(() => {
+                    console.log("Attempting Reconnect...");
+                    if (!client.isConnected()) {
+                        client.connect({ onSuccess: onConnect, onFailure: onFail, useSSL: true, userName: mqtt_user, password: mqtt_pass });
+                    }
+                }, 3000);
             }
         }
 
