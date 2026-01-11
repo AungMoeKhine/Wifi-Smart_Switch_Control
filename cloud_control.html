@@ -319,7 +319,7 @@
         <!-- HOME TAB -->
         <div id="tab-home" class="tab-content active">
             <div class="card" style="position:relative;">
-                <button onclick="refreshState(this)"
+                <button id="refreshBtn" onclick="refreshState(this)"
                     style="position:absolute; top:15px; right:15px; background:none; border:none; font-size:1.5rem; cursor:pointer; width:30px; height:30px; padding:0; line-height:1;"
                     title="Refresh Device Status">🔄</button>
                 <h2>👋 Manual Control</h2>
@@ -676,24 +676,26 @@
         function showDeviceOffline() {
             document.getElementById('deviceOfflineBanner').style.display = 'block';
 
-            // Visual cue on buttons
-            let btns = document.querySelectorAll('.relay-btn');
-            btns.forEach(b => {
-                b.style.opacity = "0.6";
-                b.style.cursor = "not-allowed";
-                // let badge = b.querySelector('.status-badge');
-                // if (badge) badge.innerText = "OFFLINE"; // Keep last state text per user request
+            // Lock UI (Disable all inputs/buttons)
+            let all = document.querySelectorAll('button, input');
+            all.forEach(el => {
+                if (el.id !== 'refreshBtn') {
+                    el.disabled = true;
+                    el.style.opacity = "0.5";
+                    el.style.cursor = "not-allowed";
+                }
             });
         }
 
         function showDeviceOnline() {
             document.getElementById('deviceOfflineBanner').style.display = 'none';
 
-            // Restore visual cue
-            let btns = document.querySelectorAll('.relay-btn');
-            btns.forEach(b => {
-                b.style.opacity = "1";
-                b.style.cursor = "pointer";
+            // Unlock UI
+            let all = document.querySelectorAll('button, input');
+            all.forEach(el => {
+                el.disabled = false;
+                el.style.opacity = "1";
+                el.style.cursor = "pointer";
             });
         }
 
