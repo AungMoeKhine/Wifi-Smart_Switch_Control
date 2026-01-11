@@ -318,16 +318,29 @@
 
             <div class="card">
                 <h2>⏱️ Multi-Timer</h2>
+                <div style="margin: 10px 0; display:flex; justify-content:center; gap:15px; align-items:center;">
+                    <button class="action-btn" style="width:auto; margin:0; padding:6px 12px; background:#28a745;"
+                        onclick="addTimer()">+ Add Timer</button>
+                </div>
                 <div id="timerList"></div>
+                <button class="action-btn" onclick="saveTimers()">Save Timer Presets</button>
             </div>
 
             <div class="card">
                 <h2>📅 Schedules</h2>
-                <div style="margin-bottom:10px;">
-                    <label><input type="checkbox" id="schedMaster" onclick="toggleSchedGlobal()"> Global Schedule
-                        Active</label>
+                <div style="margin: 10px 0; display:flex; justify-content:center; gap:15px; align-items:center;">
+                    <button class="action-btn" style="width:auto; margin:0; padding:6px 12px; background:#28a745;"
+                        onclick="addSched()">+ Add Schedule</button>
+                </div>
+                <div style="margin:10px 0;">
+                    <label
+                        style="font-weight:bold; font-size:1.1rem; display:flex; align-items:center; justify-content:center; gap:10px; cursor:pointer;">
+                        <input type="checkbox" id="schedMaster" onchange="toggleMaster(); saveAllSchedules(true);">
+                        Global Schedule Active
+                    </label>
                 </div>
                 <div id="scheduleList"></div>
+                <button class="action-btn" onclick="saveAllSchedules()">Save All Schedules</button>
             </div>
         </div>
 
@@ -580,6 +593,7 @@
         }
 
         function onMessageArrived(message) {
+            if (window.updateLock) return; // Ignore updates while saving
             try {
                 let data = JSON.parse(message.payloadString);
 
@@ -625,8 +639,15 @@
                         updateHomeUI();
                     }
                 }
-                if (data.timers) { timerPresets = data.timers; renderTimers(); }
-                if (data.schedules) { schedules = data.schedules; globalSchedActive = (data.sActive == 1); renderSchedules(); }
+                if (data.timers) {
+                    timerPresets = data.timers.filter(t => t.min > 0 || t.mask > 0 || t.enabled);
+                    renderTimers();
+                }
+                if (data.schedules) {
+                    schedules = data.schedules.filter(s => s.on || s.m > 0);
+                    globalSchedActive = (data.sActive == 1);
+                    renderSchedules();
+                }
 
                 // Always update Info/Lock UI LAST to ensure any re-rendered elements (like timers) get locked
                 if (data.states || data.expired !== undefined) {
@@ -806,163 +827,262 @@
 
         function enableSaveTz() { /* visual effect? */ }
 
+        // --- UNIFIED TIMER LOGIC ---
         function renderTimers() {
             let html = "";
+            if (timerPresets.length === 0) html = "<div style='color:#777; font-style:italic; text-align:center;'>No timer presets. Click '+ Add Timer'.</div>";
+
             timerPresets.forEach((t, i) => {
+                let disabledState = t.enabled ? "" : "disabled='true'";
+                let opacity = t.enabled ? "1" : "0.7";
+
+                let btnLabel = "▶ START";
+                let btnBg = t.enabled ? "#17a2b8" : "#6c757d";
+                let btnAction = `runTimer(${i})`;
+
+                // Check if running (Cloud status check)
                 let isRunning = false;
                 for (let r = 0; r < 8; r++) { if (((t.mask >> r) & 1) && timerRem[r] > 0) isRunning = true; }
-                let actionBtn = "";
+
                 if (isRunning) {
-                    actionBtn = `<button class="action-btn" style="background:#fd7e14" onclick="stopTimer(${t.mask})">STOP</button>`;
-                } else if (t.enabled) {
-                    actionBtn = `<button class="action-btn" style="background:#17a2b8" onclick="runTimer(${t.min}, ${t.mask})">START</button>`;
-                } else {
-                    // Disabled state
-                    actionBtn = `<button class="action-btn" style="background:#ccc; cursor:not-allowed; opacity:0.6" onclick="alert('Please enable this timer first.')">START</button>`;
+                    btnLabel = "⬛ STOP";
+                    btnBg = "#fd7e14";
+                    btnAction = `stopTimer(${i})`;
                 }
 
-                html += `<div class="sched-item" style="opacity:${t.enabled ? 1 : 0.6}">
-             <div style="display:flex; justify-content:space-between; margin-bottom:5px; align-items:center;">
-                <div style="display:flex; align-items:center; gap:5px;">
-                    <div style="display:flex; align-items:center; gap:5px;">
-                        <span>Run for</span>
-                        <input type="number" value="${t.min}" onchange="saveTimer(${i}, this.value, ${t.mask}, ${t.enabled})" style="width:60px; padding:4px; border-radius:4px; border:1px solid #ccc; text-align:center;" min="1">
-                        <span>mins</span>
-                    </div>
+                html += `<div class="sched-item" style="opacity:${opacity}">
+             <div style="display:flex; justify-content:space-between; margin-bottom:8px; align-items:center;">
+                <div style="font-weight:bold; color:#007bff; display:flex; align-items:center; gap:8px;">
+                    <input type="checkbox" ${t.enabled ? 'checked' : ''} onchange="updT(${i},'en',this.checked)" style="width:18px; height:18px;">
+                    Preset ${i + 1}
                 </div>
-                <input type="checkbox" ${t.enabled ? 'checked' : ''} onchange="saveTimer(${i}, ${t.min}, ${t.mask}, this.checked)">
+                <button onclick="remTimer(${i})" style="background:#dc3545; color:white; border:none; border-radius:4px; padding:2px 8px; cursor:pointer;">✕</button>
              </div>
-             ${renderRelayMask(t.mask, (val) => saveTimer(i, t.min, val, t.enabled))}
-             <div style="text-align:center; margin-top:5px;">${actionBtn}</div>
+             <div style="display:flex; gap:10px; justify-content:center; margin-bottom:8px; align-items:center;">
+                <span>Run for</span>
+                <input type="number" value="${t.min}" onchange="updT(${i},'min',this.value)" style="width:60px; padding:4px; border-radius:4px; border:1px solid #ccc; text-align:center;" min="1">
+                <span>mins</span>
+             </div>
+             ${renderRelayMask('timer', i, t.mask)}
+             <div style="text-align:center; margin-top:5px;">
+                <button class="action-btn" style="background:${btnBg}; width:100%;" onclick="${btnAction}" ${disabledState}>${btnLabel}</button>
+             </div>
           </div>`;
             });
-            document.getElementById('timerList').innerHTML = html || "<p style='color:#777'>No presets found.</p>";
+            document.getElementById('timerList').innerHTML = html;
         }
 
-        function editTimerMin(i, oldMin) {
-            if (devInfo.expired) { alert("License Expired. Remote control disabled."); return; }
-            let newMin = prompt("Enter Timer Duration (minutes):", oldMin);
-            if (newMin && !isNaN(newMin)) {
-                let m = parseInt(newMin);
-                if (m > 0 && m < 1440) {
-                    let t = timerPresets[i];
-                    saveTimer(i, m, t.mask, t.enabled);
-                } else {
-                    alert("Please enter valid minutes (1-1440)");
-                }
+        function addTimer() {
+            if (timerPresets.length >= 6) { alert("Max 6 presets allowed!"); return; }
+            timerPresets.push({ min: 10, mask: 0, enabled: 1 });
+            renderTimers();
+        }
+
+        function remTimer(i) {
+            if (confirm("Delete this preset?")) {
+                timerPresets.splice(i, 1);
+                renderTimers();
+                saveTimers(true); // Auto-save
             }
         }
 
-        function runTimer(min, mask) {
-            if (devInfo.expired) { alert("License Expired. Remote control disabled."); return; }
-            sendCmd({ "timerReq": { "min": min, "mask": mask } });
-        }
-        function stopTimer(mask) {
-            if (devInfo.expired) { alert("License Expired. Remote control disabled."); return; }
-            sendCmd({ "stopTimer": { "mask": mask } });
-        }
-        function saveTimer(i, min, mask, en) {
-            if (devInfo.expired) { alert("License Expired. Remote control disabled."); return; }
-            sendCmd({ "timerSave": { "i": i, "min": min, "mask": mask, "en": en ? 1 : 0 } });
+        function updT(i, type, val) {
+            if (type === 'min') timerPresets[i].min = parseInt(val);
+            else if (type === 'en') timerPresets[i].enabled = val ? 1 : 0;
+            else if (type === 'mask') timerPresets[i].mask = val;
+            renderTimers();
         }
 
+        window.updateLock = false;
+
+        function sendBatchCmd(list, successMsg, silent) {
+            if (!list || list.length === 0) return;
+            updateLock = true; // Lock UI from server updates
+            let index = 0;
+            function next() {
+                if (index < list.length) {
+                    sendCmd(list[index]);
+                    index++;
+                    // Increased delay to 400ms to allow Firmware Flash Write to complete
+                    // Default Preferences write is blocking and slow on ESP32
+                    setTimeout(next, 400);
+                } else {
+                    if (!silent && successMsg) alert(successMsg);
+                    // Hold lock for 2.5s to allow device state to settle
+                    setTimeout(() => { updateLock = false; console.log("Unlock"); }, 2500);
+                }
+            }
+            next();
+        }
+
+        function saveTimers(silent) {
+            if (devInfo.expired) { alert("License Expired."); return; }
+            let payloads = [];
+            for (let i = 0; i < 6; i++) {
+                if (i < timerPresets.length) {
+                    let t = timerPresets[i];
+                    if (t.enabled && t.mask === 0 && !silent) { alert("Preset " + (i + 1) + " has no switches selected!"); return; }
+                    payloads.push({ "timerSave": { "i": i, "min": t.min, "mask": t.mask, "en": t.enabled } });
+                } else {
+                    payloads.push({ "timerSave": { "i": i, "min": 0, "mask": 0, "en": 0 } });
+                }
+            }
+            sendBatchCmd(payloads, "Timers Saved!", silent);
+        }
+
+        function runTimer(i) {
+            if (devInfo.expired) { alert("License Expired."); return; }
+            let t = timerPresets[i];
+            if (!t.mask) { alert("Select switches first!"); return; }
+
+            let payloads = [];
+            payloads.push({ "timerSave": { "i": i, "min": t.min, "mask": t.mask, "en": t.enabled } });
+
+            // Send save then run
+            updateLock = true;
+            sendCmd(payloads[0]);
+            setTimeout(() => {
+                sendCmd({ "timerReq": { "min": t.min, "mask": t.mask } });
+                setTimeout(() => { updateLock = false; }, 2000);
+            }, 500); // 500ms safety
+        }
+
+        function stopTimer(i) {
+            let t = timerPresets[i];
+            sendCmd({ "stopTimer": { "mask": t.mask } });
+        }
+
+
+        // --- UNIFIED SCHEDULE LOGIC ---
         function renderSchedules() {
             document.getElementById('schedMaster').checked = globalSchedActive;
             let html = "";
+            if (schedules.length === 0) html = "<div style='color:#777; font-style:italic; text-align:center;'>No schedules set. Click '+ Add Schedule'.</div>";
+
             schedules.forEach((s, i) => {
                 let sTime = pad(s.sH) + ":" + pad(s.sM);
                 let eTime = pad(s.eH) + ":" + pad(s.eM);
+                let opacity = s.on ? "1" : "0.7";
 
-                html += `<div class="sched-item" style="opacity:${s.on ? 1 : 0.6}">
-             <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
-                <div style="display:flex; gap:5px; align-items:center;">
-                     <input type="time" value="${sTime}" onchange="updateSchedTime(${i}, 's', this.value)" style="border:1px solid #ddd; border-radius:4px; padding:2px;">
-                     <span>to</span>
-                     <input type="time" value="${eTime}" onchange="updateSchedTime(${i}, 'e', this.value)" style="border:1px solid #ddd; border-radius:4px; padding:2px;">
+                html += `<div class="sched-item" style="opacity:${opacity}">
+             <div style="display:flex; justify-content:space-between; margin-bottom:8px; align-items:center;">
+                <div style="font-weight:bold; color:#007bff; display:flex; align-items:center; gap:8px;">
+                    <input type="checkbox" ${s.on ? 'checked' : ''} onchange="updS(${i},'on',this.checked)" style="width:18px; height:18px;">
+                    Schedule ${i + 1}
                 </div>
-                <input type="checkbox" ${s.on ? 'checked' : ''} onchange="saveSched(${i}, ${s.sH},${s.sM},${s.eH},${s.eM},${s.m}, this.checked)">
+                <button onclick="remSched(${i})" style="background:#dc3545; color:white; border:none; border-radius:4px; padding:2px 8px; cursor:pointer;">✕</button>
              </div>
-             ${renderRelayMask(s.m, (val) => saveSched(i, s.sH, s.sM, s.eH, s.eM, val, s.on))}
+             <div style="display:flex; gap:10px; justify-content:center; margin-bottom:8px;">
+                <input type="time" value="${sTime}" onchange="updS(${i}, 's', this.value)" style="border:1px solid #ddd; border-radius:4px; padding:4px;">
+                <span style="align-self:center">to</span>
+                <input type="time" value="${eTime}" onchange="updS(${i}, 'e', this.value)" style="border:1px solid #ddd; border-radius:4px; padding:4px;">
+             </div>
+             ${renderRelayMask('sched', i, s.m)}
           </div>`;
             });
-            document.getElementById('scheduleList').innerHTML = html || "<p style='color:#777'>No schedules.</p>";
+            document.getElementById('scheduleList').innerHTML = html;
         }
 
-        function updateSchedTime(i, type, val) {
-            let s = schedules[i];
-            let parts = val.split(':');
-            if (parts.length < 2) return;
+        // Helpers for Schedule
+        function updateSchedTime(i, type, val) { /* Deprecated/Superseded by updS? No, updS defined below covers it */ }
 
-            let h = parseInt(parts[0]);
-            let m = parseInt(parts[1]);
-
-            if (type === 's') { s.sH = h; s.sM = m; }
-            else { s.eH = h; s.eM = m; }
-
-            saveSched(i, s.sH, s.sM, s.eH, s.eM, s.m, s.on);
+        function addSched() {
+            if (schedules.length >= 6) { alert("Max 6 schedules allowed!"); return; }
+            schedules.push({ sH: 18, sM: 0, eH: 22, eM: 0, m: 0, on: 1 });
+            renderSchedules();
         }
 
-        function toggleSchedGlobal() {
-            if (devInfo.expired) { alert("License Expired. Remote control disabled."); return; }
-            sendCmd({ "schedGlobal": document.getElementById('schedMaster').checked ? 1 : 0 });
+        function remSched(i) {
+            if (confirm("Delete this schedule?")) {
+                schedules.splice(i, 1);
+                renderSchedules();
+                saveAllSchedules(true);
+            }
         }
 
-        function saveSched(i, sH, sM, eH, eM, m, on) {
-            if (devInfo.expired) { alert("License Expired. Remote control disabled."); return; }
-            sendCmd({ "schedSave": { "i": i, "sH": sH, "sM": sM, "eH": eH, "eM": eM, "m": m, "on": on ? 1 : 0 } });
+        function updS(i, type, val) {
+            if (type === 'on') schedules[i].on = val ? 1 : 0;
+            else if (type === 'mask') schedules[i].m = val;
+            else if (type === 's' || type === 'e') {
+                let parts = val.split(':');
+                if (parts.length < 2) return;
+                let h = parseInt(parts[0]);
+                let m = parseInt(parts[1]);
+                if (type === 's') { schedules[i].sH = h; schedules[i].sM = m; }
+                else { schedules[i].eH = h; schedules[i].eM = m; }
+            }
+            renderSchedules();
+        }
+
+        function saveAllSchedules(silent) {
+            if (devInfo.expired) { alert("License Expired."); return; }
+
+            let payloads = [];
+            let master = document.getElementById('schedMaster').checked;
+            payloads.push({ "schedActive": master ? 1 : 0 });
+
+            for (let i = 0; i < 6; i++) {
+                if (i < schedules.length) {
+                    let s = schedules[i];
+                    if (s.on && s.m === 0 && !silent) { alert("Schedule #" + (i + 1) + " has no switches selected!"); return; }
+                    payloads.push({ "schedSave": { "i": i, "sH": s.sH, "sM": s.sM, "eH": s.eH, "eM": s.eM, "m": s.m, "on": s.on ? 1 : 0 } });
+                } else {
+                    // Use 'schedDel' command for explicit deletion/clearing of unused slots
+                    // This avoids parsing heavy payloads on the firmware side for empty slots
+                    payloads.push({ "schedDel": i });
+                }
+            }
+            sendBatchCmd(payloads, "Schedules Saved!", silent);
         }
 
         function pad(n) { return (n < 10 ? '0' : '') + n; }
-
-        function editSched(i) {
-            if (devInfo.expired) { alert("License Expired. Remote control disabled."); return; }
-            let s = schedules[i];
-            let newS = prompt("Start HH:MM", pad(s.sH) + ":" + pad(s.sM));
-            if (!newS) return;
-            let newE = prompt("End HH:MM", pad(s.eH) + ":" + pad(s.eM));
-            if (!newE) return;
-
-            let [sh, sm] = newS.split(':').map(Number);
-            let [eh, em] = newE.split(':').map(Number);
-            if (!isNaN(sh) && !isNaN(sm)) {
-                saveSched(i, sh, sm, eh, em, s.m, s.on);
-            }
-        }
 
         // Interactive Checkbox Mask Renderer
-        function renderRelayMask(mask, updateCallback) {
-            // Generate unique ID for this group
-            let id = "cb_" + Math.floor(Math.random() * 1000000);
-
-            // Store the callback in global window scope so the inline onchange can find it
-            window["cb_func_" + id] = updateCallback;
-
-            let h = `<div class="chk-group" id="${id}">`;
+        function renderRelayMask(context, index, currentMask) {
+            let html = `<div class="chk-group" style="justify-content:center; gap:10px; margin-bottom:10px; display:flex; flex-wrap:wrap;">`;
             for (let r = 0; r < 8; r++) {
-                let chk = ((mask >> r) & 1) ? "checked" : "";
-                h += `<label class="chk-label">
-                  <input type="checkbox" ${chk} onchange="handleMaskClick('${id}')"> S${r + 1}
-               </label>`;
+                let checked = ((currentMask >> r) & 1) ? "checked" : "";
+                let lbl = relayLabels[r] ? relayLabels[r] : ("S" + (r + 1));
+
+                html += `<label style="display:flex; align-items:center; gap:4px; font-size:0.9rem; cursor:pointer;">
+                    <input type="checkbox" ${checked} onchange="handleMaskClick('${context}', ${index}, ${r}, this.checked)"> 
+                    ${lbl}
+                </label>`;
             }
-            h += `</div>`;
-            return h;
+            html += `</div>`;
+            return html;
         }
 
-        // Global handler to recalculate mask and call stored callback
-        window.handleMaskClick = function (id) {
-            let div = document.getElementById(id);
-            if (!div) return;
-            let newMask = 0;
-            let inputs = div.querySelectorAll('input[type="checkbox"]');
-            inputs.forEach((inp, idx) => {
-                if (inp.checked) newMask |= (1 << idx);
-            });
+        function handleMaskClick(ctx, idx, bit, val) {
+            if (ctx === 'timer') {
+                let t = timerPresets[idx];
+                if (val) t.mask |= (1 << bit);
+                else t.mask &= ~(1 << bit);
+                renderTimers();
+            } else {
+                let s = schedules[idx];
+                if (val) s.m |= (1 << bit);
+                else s.m &= ~(1 << bit);
+                renderSchedules();
+            }
+        }
 
-            // Call the specific callback function
-            if (window["cb_func_" + id]) window["cb_func_" + id](newMask);
-        };
+        // Assuming onMessageArrived exists elsewhere in the full document,
+        // these modifications are applied to the relevant sections within it.
+        // --- FULL STATE SYNC ---
+        // Timers
+        // if (data.timers) {
+        //     timerPresets = data.timers.filter(t => t.min > 0 || t.mask > 0 || t.enabled);
+        //     renderTimers();
+        // }
 
-        function pad(n) { return (n < 10 ? '0' : '') + n; }
+        // Schedules
+        // if (data.schedules) {
+        //     if (data.sActive !== undefined) globalSchedActive = (data.sActive == 1);
+        //     schedules = data.schedules.filter(s => s.on || s.m > 0);
+        //     renderSchedules();
+        // }
+        // -----------------------
 
         // --- DYNAMIC TIMER COUNTDOWN ---
         setInterval(() => {
