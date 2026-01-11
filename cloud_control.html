@@ -473,6 +473,7 @@
                 htR += `<button id="btn${i}" class="relay-btn btn-off" onclick="toggle(${i})">`;
                 htR += `<span class="btn-label" id="lbl${i}">S${i + 1}</span>`;
                 htR += `<span class="status-badge">WAITING...</span>`;
+                htR += `<div id="td${i}" style="font-size:0.8rem; color:#ffc107; min-height:15px; font-weight:bold;"></div>`;
                 htR += `</button>`;
 
                 htL += `<div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
@@ -689,11 +690,14 @@
 
                     btn.querySelector('.status-badge').innerHTML = badgeText;
 
-                    if (timerRunning) {
-                        let t = timerRem[i];
-                        document.getElementById('td' + i).innerText = Math.ceil(t / 60) + "m";
-                    } else {
-                        document.getElementById('td' + i).innerText = "";
+                    let tdEl = document.getElementById('td' + i);
+                    if (tdEl) {
+                        if (timerRunning) {
+                            let t = timerRem[i];
+                            tdEl.innerText = Math.ceil(t / 60) + "m";
+                        } else {
+                            tdEl.innerText = "";
+                        }
                     }
 
                     // Update labels
