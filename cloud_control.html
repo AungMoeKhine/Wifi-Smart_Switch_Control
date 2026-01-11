@@ -78,7 +78,9 @@
         }
 
         .relay-btn:active {
-            transform: scale(0.96);
+            transform: scale(0.96) translateY(4px);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+            transition: none;
         }
 
         .btn-on {
@@ -163,6 +165,14 @@
             font-weight: 600;
             font-size: 0.9rem;
             margin-top: 5px;
+            transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .action-btn:active {
+            transform: scale(0.96) translateY(4px);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+            transition: none;
         }
 
         .sched-item {
@@ -248,7 +258,7 @@
     </style>
 </head>
 
-<body>
+<body ontouchstart="">
 
     <div class="card login-card" id="loginCard">
         <!-- AMK Logo Placeholder (SVG) -->
@@ -620,7 +630,13 @@
                     document.getElementById('connStatus').style.display = 'none';
 
                     if (data.states) {
-                        relayState = data.states;
+                        if (!window.ignoreUpdates) window.ignoreUpdates = [];
+                        // Merge server state, respecting optimistic locks
+                        for (let i = 0; i < 8; i++) {
+                            if (!window.ignoreUpdates[i] || Date.now() > window.ignoreUpdates[i]) {
+                                relayState[i] = data.states[i];
+                            }
+                        }
                         timerRem = data.rem || [];
                         relayLabels = data.lbl || relayLabels;
                         schedActive = data.sch || [];
@@ -795,6 +811,15 @@
 
         function toggle(i) {
             if (devInfo.expired) { alert("License Expired. Remote control disabled."); return; }
+
+            // Optimistic UI: Update immediately
+            relayState[i] = !relayState[i] ? 1 : 0;
+            updateHomeUI();
+
+            // Lock incoming updates for this channel for 2 seconds
+            if (!window.ignoreUpdates) window.ignoreUpdates = [];
+            window.ignoreUpdates[i] = Date.now() + 2000;
+
             sendCmd({ "toggle": i });
         }
 
