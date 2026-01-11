@@ -293,7 +293,7 @@
         <div id="deviceOfflineBanner"
             style="display:none; background:#343a40; color:white; padding:15px; border-radius:12px; margin-bottom:15px; font-weight:bold; max-width: 450px; margin: 0 auto 15px auto; border: 2px solid #dc3545;">
             📡 DEVICE OFFLINE 📡<br>
-            <span style="font-size:0.8rem; font-weight:normal; color:#ddd;">Device not connected to Cloud</span>
+            <span style="font-size:0.8rem; font-weight:normal; color:#ddd;">Check Power or Wi-Fi Connection</span>
         </div>
 
         <!-- Validity Banner -->
@@ -560,7 +560,7 @@
 
         function onConnect() {
             let s = document.getElementById('connectionStatus');
-            s.innerText = "Connected to Cloud";
+            s.innerText = "☁️ App Connected";
             s.className = "connected";
             s.style.color = "#28a745"; // Restore Green color
             client.subscribe("smartswitch/" + deviceId + "/status");
