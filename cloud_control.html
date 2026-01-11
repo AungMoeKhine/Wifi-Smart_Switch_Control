@@ -960,6 +960,19 @@
             let t = timerPresets[i];
             if (!t.mask) { alert("Select switches first!"); return; }
 
+            // Optimistic UI
+            if (!window.ignoreUpdates) window.ignoreUpdates = [];
+            for (let r = 0; r < 8; r++) {
+                if (((t.mask >> r) & 1)) {
+                    relayState[r] = 1;
+                    timerRem[r] = t.min * 60;
+                    window.ignoreUpdates[r] = Date.now() + 2500;
+                }
+            }
+            updateHomeUI(); // Instant Relay Visuals
+            renderTimers(); // Instant Start->Stop Button Swap
+
+            // Command Logic
             let payloads = [];
             payloads.push({ "timerSave": { "i": i, "min": t.min, "mask": t.mask, "en": t.enabled } });
 
@@ -969,11 +982,24 @@
             setTimeout(() => {
                 sendCmd({ "timerReq": { "min": t.min, "mask": t.mask } });
                 setTimeout(() => { updateLock = false; }, 2000);
-            }, 500); // 500ms safety
+            }, 500);
         }
 
         function stopTimer(i) {
             let t = timerPresets[i];
+
+            // Optimistic UI
+            if (!window.ignoreUpdates) window.ignoreUpdates = [];
+            for (let r = 0; r < 8; r++) {
+                if (((t.mask >> r) & 1)) {
+                    relayState[r] = 0; // Assumption: Stop turns off
+                    timerRem[r] = 0;
+                    window.ignoreUpdates[r] = Date.now() + 2500;
+                }
+            }
+            updateHomeUI();
+            renderTimers();
+
             sendCmd({ "stopTimer": { "mask": t.mask } });
         }
 
