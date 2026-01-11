@@ -270,7 +270,7 @@
             </div>
         </div>
 
-        <h2 style="font-weight:800; color:#343a40; margin-bottom:0;">AMK Smart WiFi Switch</h2>
+        <h2 style="font-weight:800; color:#343a40; margin-bottom:0;">ESP32-Relay-Config</h2>
         <p style="color:#6c757d; margin-top:5px; font-size:0.9rem; margin-bottom:20px;">Control Panel</p>
 
         <div class="conn-status" id="connStatus" style="display:none">Connecting...</div>
@@ -700,6 +700,9 @@
         }
 
         function updateHomeUI() {
+            // Guard: If offline, do not update UI (prevents unlocking buttons)
+            if (document.getElementById('deviceOfflineBanner').style.display === 'block') return;
+
             for (let i = 0; i < 8; i++) {
                 let btn = document.getElementById('btn' + i);
                 if (btn) {
@@ -803,10 +806,10 @@
                 btn.style.backgroundColor = "transparent";
                 btn.style.boxShadow = "none";
 
-                btn.disabled = true;
+                btn.style.pointerEvents = "none"; // Disable clicks without dimming
                 setTimeout(() => {
                     btn.innerHTML = "🔄";
-                    btn.disabled = false;
+                    btn.style.pointerEvents = "auto";
                 }, 2000);
             }
         }
