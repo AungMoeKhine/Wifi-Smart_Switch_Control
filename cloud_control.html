@@ -279,6 +279,13 @@
             <div id="connectionStatus" class="disconnected">Disconnected</div>
         </div>
 
+        <!-- Device Offline Banner (Cloud Connected, Device Missing) -->
+        <div id="deviceOfflineBanner"
+            style="display:none; background:#343a40; color:white; padding:15px; border-radius:12px; margin-bottom:15px; font-weight:bold; max-width: 450px; margin: 0 auto 15px auto; border: 2px solid #dc3545;">
+            📡 DEVICE OFFLINE 📡<br>
+            <span style="font-size:0.8rem; font-weight:normal; color:#ddd;">Device not connected to Cloud</span>
+        </div>
+
         <!-- Validity Banner -->
         <div id="expiryBanner"
             style="display:none; background:#dc3545; color:white; padding:15px; border-radius:12px; margin-bottom:15px; font-weight:bold; max-width: 450px; margin: 0 auto 15px auto;">
@@ -574,6 +581,12 @@
             try {
                 let data = JSON.parse(message.payloadString);
 
+                // NEW: Check for explicit "online": false from LWT
+                if (data.online === false) {
+                    showDeviceOffline();
+                    return;
+                }
+
                 if (data.error) {
                     alert("Security Error: " + data.error);
                     client.disconnect();
@@ -583,34 +596,33 @@
                     return;
                 }
 
-                if (data.states) {
+                if (data.states || data.online === true) {
+                    showDeviceOnline(); // Enable UI
+
                     // Verification Success: Show Control Panel
                     document.getElementById('controlPanel').style.display = 'block';
                     document.getElementById('connStatus').style.display = 'none';
 
-                    relayState = data.states;
-                    timerRem = data.rem || [];
-                    relayLabels = data.lbl || relayLabels;
-                    schedActive = data.sch || [];
+                    if (data.states) {
+                        relayState = data.states;
+                        timerRem = data.rem || [];
+                        relayLabels = data.lbl || relayLabels;
+                        schedActive = data.sch || [];
 
-                    // Updates Labels in Input fields if not focused? 
-                    // Better to only update on Initial load or rely on user typing.
-                    // We will just update the Labels on HOME tab.
+                        devInfo.time = data.time || "--:--";
+                        devInfo.ip = data.ip || "Unknown";
+                        devInfo.wifi = data.wifi;
+                        devInfo.expired = data.expired;
+                        devInfo.daysLeft = data.daysLeft;
 
-                    devInfo.time = data.time || "--:--";
-                    devInfo.ip = data.ip || "Unknown";
-                    devInfo.wifi = data.wifi;
-                    devInfo.expired = data.expired;
-                    devInfo.daysLeft = data.daysLeft;
+                        // Sync Timezone Selection
+                        if (data.gmt) {
+                            let sel = document.getElementById('tzSelect');
+                            if (sel && sel.value != data.gmt) sel.value = data.gmt;
+                        }
 
-                    // Sync Timezone Selection
-                    if (data.gmt) {
-                        let sel = document.getElementById('tzSelect');
-                        if (sel && sel.value != data.gmt) sel.value = data.gmt;
+                        updateHomeUI();
                     }
-
-                    updateHomeUI();
-                    // updateInfoUI(); // Moved to end
                 }
                 if (data.timers) { timerPresets = data.timers; renderTimers(); }
                 if (data.schedules) { schedules = data.schedules; globalSchedActive = (data.sActive == 1); renderSchedules(); }
@@ -621,6 +633,30 @@
                 }
 
             } catch (e) { console.error(e); }
+        }
+
+        function showDeviceOffline() {
+            document.getElementById('deviceOfflineBanner').style.display = 'block';
+
+            // Visual cue on buttons
+            let btns = document.querySelectorAll('.relay-btn');
+            btns.forEach(b => {
+                b.style.opacity = "0.6";
+                b.style.cursor = "not-allowed";
+                let badge = b.querySelector('.status-badge');
+                if (badge) badge.innerText = "OFFLINE";
+            });
+        }
+
+        function showDeviceOnline() {
+            document.getElementById('deviceOfflineBanner').style.display = 'none';
+
+            // Restore buttons
+            let btns = document.querySelectorAll('.relay-btn');
+            btns.forEach(b => {
+                b.style.opacity = "1";
+                b.style.cursor = "pointer";
+            });
         }
 
         function updateHomeUI() {
