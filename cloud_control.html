@@ -469,6 +469,7 @@
             let htR = "";
             let htL = "";
             for (let i = 0; i < 8; i++) {
+                // Default to Red/Off visual, but text says WAITING
                 htR += `<button id="btn${i}" class="relay-btn btn-off" onclick="toggle(${i})">`;
                 htR += `<span class="btn-label" id="lbl${i}">S${i + 1}</span>`;
                 htR += `<span class="status-badge">WAITING...</span>`;
@@ -620,7 +621,6 @@
                             let sel = document.getElementById('tzSelect');
                             if (sel && sel.value != data.gmt) sel.value = data.gmt;
                         }
-
                         updateHomeUI();
                     }
                 }
@@ -643,15 +643,15 @@
             btns.forEach(b => {
                 b.style.opacity = "0.6";
                 b.style.cursor = "not-allowed";
-                let badge = b.querySelector('.status-badge');
-                if (badge) badge.innerText = "OFFLINE";
+                // let badge = b.querySelector('.status-badge');
+                // if (badge) badge.innerText = "OFFLINE"; // Keep last state text per user request
             });
         }
 
         function showDeviceOnline() {
             document.getElementById('deviceOfflineBanner').style.display = 'none';
 
-            // Restore buttons
+            // Restore visual cue
             let btns = document.querySelectorAll('.relay-btn');
             btns.forEach(b => {
                 b.style.opacity = "1";
@@ -662,26 +662,47 @@
         function updateHomeUI() {
             for (let i = 0; i < 8; i++) {
                 let btn = document.getElementById('btn' + i);
-                let on = relayState[i] == 1;
-                btn.className = on ? "relay-btn btn-on" : "relay-btn btn-off";
+                if (btn) {
+                    let on = relayState[i] == 1;
+                    let isSched = schedActive[i] == 1;
+                    let timerRunning = timerRem[i] > 0;
 
-                let lbl = relayLabels[i] ? relayLabels[i] : ("S" + (i + 1));
-                document.getElementById('lbl' + i).innerText = lbl;
+                    btn.className = on ? "relay-btn btn-on" : "relay-btn btn-off";
 
-                // Also update Inputs if they are empty or first load
-                let inp = document.getElementById('inpLbl' + i);
-                if (inp && inp.value.startsWith("S") && lbl !== inp.value) inp.value = lbl;
+                    let badgeText = "OFF";
 
-                let badgeHTML = "";
-                if (on) {
-                    if (timerRem[i] > 0) {
-                        let m = Math.ceil(timerRem[i] / 60);
-                        badgeHTML = `⏳ TIMER ${m}m`;
-                    } else if (schedActive[i] == 1) badgeHTML = `📅 SCHEDULE`;
-                    else badgeHTML = `👋 MANUAL`;
-                } else badgeHTML = `OFF`;
+                    // CHECKING STATE LOGIC (Matches Local)
+                    // If 'ready' flag is missing (old firmware), fallback to checking time string
+                    let isReady = (devInfo.ready === 1) || (devInfo.ready === undefined && devInfo.time != "--:--");
 
-                btn.querySelector('.status-badge').innerHTML = badgeHTML;
+                    if (!isReady) {
+                        badgeText = "📡<br>CHECKING...";
+                        btn.style.opacity = "0.9";
+                    } else {
+                        btn.style.opacity = "1";
+                        if (on) {
+                            if (timerRunning) badgeText = "⏳<br>TIMER";
+                            else if (isSched) badgeText = "📅<br>SCHEDULE";
+                            else badgeText = "👋<br>MANUAL";
+                        }
+                    }
+
+                    btn.querySelector('.status-badge').innerHTML = badgeText;
+
+                    if (timerRunning) {
+                        let t = timerRem[i];
+                        document.getElementById('td' + i).innerText = Math.ceil(t / 60) + "m";
+                    } else {
+                        document.getElementById('td' + i).innerText = "";
+                    }
+
+                    // Update labels
+                    if (relayLabels && relayLabels[i]) {
+                        document.getElementById('lbl' + i).innerText = relayLabels[i];
+                        let inp = document.getElementById('inpLbl' + i);
+                        if (inp && document.activeElement !== inp) inp.value = relayLabels[i];
+                    }
+                }
             }
         }
 
