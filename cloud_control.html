@@ -58,6 +58,7 @@
             }
         }
 
+        /* FIXED BUTTON STYLING TO MATCH .INO EXACTLY */
         .relay-btn {
             width: 100%;
             height: 135px !important;
@@ -72,8 +73,8 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            /* transition removed for instant feel */
+            justify-content: flex-start;
+            /* Stack from top, not center */
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
             padding: 10px 4px;
             overflow: hidden;
@@ -95,27 +96,41 @@
             opacity: 0.9;
         }
 
+        /* FIXED LABEL STYLING */
         .btn-label {
             font-size: 0.95rem;
             font-weight: 700;
             line-height: 1.2;
-            margin-bottom: 8px;
             width: 100%;
             min-height: 2.4em;
+            /* Force height equal to 2 lines */
             display: flex;
             align-items: center;
+            /* Center 1-line text vertically in the 2-line space */
             justify-content: center;
+            margin-bottom: 8px;
+            /* Consistent gap to badge */
+            word-wrap: break-word;
         }
 
         .status-badge {
             font-size: 0.75rem;
             font-weight: 500;
             background: rgba(0, 0, 0, 0.25);
-            padding: 4px 10px;
+            padding: 3px 10px;
             border-radius: 12px;
             display: inline-flex;
             align-items: center;
             gap: 4px;
+        }
+
+        /* TIMER DISPLAY CLASS FROM .INO */
+        .timer-display {
+            font-weight: bold;
+            color: #ffc107;
+            font-size: 0.9rem;
+            margin-top: 5px;
+            min-height: 1.2em;
         }
 
         #connectionStatus {
@@ -168,7 +183,6 @@
             font-weight: 600;
             font-size: 0.9rem;
             margin-top: 5px;
-            /* transition removed */
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
         }
 
@@ -273,8 +287,8 @@
             </div>
         </div>
 
-        <h2 style="font-weight:800; color:#343a40; margin-bottom:0;">Smart Switch Cloud Control</h2>
-        <p style="color:#6c757d; margin-top:5px; font-size:0.9rem; margin-bottom:20px;">Log-in Panel</p>
+        <h2 style="font-weight:800; color:#343a40; margin-bottom:0;">ESP32-Relay-Config</h2>
+        <p style="color:#6c757d; margin-top:5px; font-size:0.9rem; margin-bottom:20px;">Control Panel</p>
 
         <div class="conn-status" id="connStatus" style="display:none">Connecting...</div>
         <input type="text" id="deviceIdInput" placeholder="e.g. 5CCF7F1A2B3D">
@@ -288,7 +302,7 @@
     <div id="controlPanel" style="display:none">
         <div style="text-align:center; margin-top:10px;">
             <img src="logo.png" alt="Logo" style="width:120px; height:120px; border-radius:50%; margin-bottom:5px;">
-            <h1 style="font-size:1.5rem; margin:10px 0 5px; color:#333;">Smart Switch Cloud Control</h1>
+            <h1 style="font-size:1.5rem; margin:10px 0 5px; color:#333;">Smart Cloud Control</h1>
             <div id="connectionStatus" class="disconnected">Disconnected</div>
         </div>
 
@@ -348,7 +362,8 @@
                 <div style="margin:10px 0;">
                     <label
                         style="font-weight:bold; font-size:1.1rem; display:flex; align-items:center; justify-content:center; gap:10px; cursor:pointer;">
-                        <input type="checkbox" id="schedMaster" onchange="toggleMaster(); saveAllSchedules(true);">
+                        <!-- FIXED: Removed invalid toggleMaster() function, now calls saveAllSchedules directly -->
+                        <input type="checkbox" id="schedMaster" onchange="saveAllSchedules(true);">
                         Global Schedule Active
                     </label>
                 </div>
@@ -398,76 +413,6 @@
 
     <script>
         let client;
-        // ... (existing vars) ...
-
-        // ... (skipping unchanged parts until updateInfoUI) ...
-
-        function updateInfoUI() {
-            document.getElementById('infoStatus').innerText = "Connected";
-            document.getElementById('infoTime').innerText = devInfo.time;
-            document.getElementById('infoIp').innerText = devInfo.ip;
-            let w = devInfo.wifi;
-            let wText = "No WiFi";
-            if (w) {
-                if (w < 0) {
-                    // RSSI Value (e.g. -65)
-                    let qual = Math.min(Math.max(2 * (w + 100), 0), 100);
-                    wText = `${qual}% (${w} dBm)`;
-                } else {
-                    wText = "Connected";
-                }
-            }
-            document.getElementById('infoWifi').innerText = wText;
-
-            let expText = devInfo.expired ? "EXPIRED" : (devInfo.daysLeft + " Days Left");
-            let expCol = devInfo.expired ? "red" : "green";
-            document.getElementById('infoLic').innerHTML = `<span style="color:${expCol}; font-weight:bold;">${expText}</span>`;
-
-            // Logic for Banners
-            if (devInfo.expired) {
-                document.getElementById('expiryBanner').style.display = 'block';
-                document.getElementById('warnBanner').style.display = 'none';
-                setExpiryLock(true);
-            } else if (devInfo.daysLeft <= 7 && devInfo.daysLeft >= 0) {
-                document.getElementById('expiryBanner').style.display = 'none';
-                document.getElementById('warnBanner').style.display = 'block';
-                document.getElementById('warnMsg').innerText = devInfo.daysLeft + " days remaining.";
-                setExpiryLock(false);
-            } else {
-                document.getElementById('expiryBanner').style.display = 'none';
-                document.getElementById('warnBanner').style.display = 'none';
-                setExpiryLock(false);
-            }
-        }
-
-        function setExpiryLock(expired) {
-            // Disable all interactive elements
-            const els = document.querySelectorAll('button, input, select');
-            els.forEach(el => {
-                // EXEMPTIONS:
-                // 1. Navigation Tabs (to switch between Home/Settings)
-                if (el.classList.contains('tab-btn')) return;
-                // 2. License Input
-                if (el.id === 'licInput') return;
-                // 3. License Submit Button
-                if (el.id === 'btnLic') return;
-
-                // Login screen inputs should not be locked by this status logic ideally because they are hidden,
-                // but just in case:
-                if (el.classList.contains('login') || el.id === 'deviceIdInput' || el.id === 'devicePinInput') return;
-
-                el.disabled = expired;
-                if (expired) {
-                    el.style.opacity = "0.5";
-                    el.style.cursor = "not-allowed";
-                } else {
-                    el.style.opacity = "1";
-                    el.style.cursor = "pointer";
-                    if (el.tagName === 'INPUT') el.style.cursor = "text";
-                }
-            });
-        }
-
         let deviceId;
         const mqtt_broker = "210195b635414206adcd944325fe6f59.s1.eu.hivemq.cloud";
         const mqtt_port = 8884; // SSL Port
@@ -485,21 +430,20 @@
 
         if (localStorage.getItem("lastDid")) document.getElementById('deviceIdInput').value = localStorage.getItem("lastDid");
         if (localStorage.getItem('lastPin') && document.getElementById('devicePinInput')) document.getElementById('devicePinInput').value = localStorage.getItem('lastPin');
-        if (localStorage.getItem("lastPin") && document.getElementById('devicePinInput')) document.getElementById('devicePinInput').value = localStorage.getItem("lastPin");
 
         function initUI() {
             let rc = document.getElementById('relayContainer');
             let lc = document.getElementById('labelInputs');
-            if (!rc) return; // robustness
+            if (!rc) return;
 
             let htR = "";
             let htL = "";
             for (let i = 0; i < 8; i++) {
-                // Default to Red/Off visual, but text says WAITING
+                // FIXED STRUCTURE TO MATCH .INO EXACTLY
                 htR += `<button id="btn${i}" class="relay-btn btn-off" onclick="toggle(${i})">`;
                 htR += `<span class="btn-label" id="lbl${i}">S${i + 1}</span>`;
                 htR += `<span class="status-badge">WAITING...</span>`;
-                htR += `<div id="td${i}" style="font-size:0.8rem; color:#ffc107; min-height:15px; font-weight:bold;"></div>`;
+                htR += `<div id="td${i}" class="timer-display"></div>`;
                 htR += `</button>`;
 
                 htL += `<div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
@@ -527,7 +471,7 @@
                 opt.value = val; opt.innerText = txt;
                 sel.appendChild(opt);
             }
-            sel.value = "19800"; // Default +5:30 (India) or 21600 (+6:00)
+            sel.value = "23400";
         }
 
         initUI();
@@ -565,13 +509,12 @@
             let s = document.getElementById('connectionStatus');
             s.innerText = "☁️ App Connected";
             s.className = "connected";
-            s.style.color = "#28a745"; // Restore Green color
+            s.style.color = "#28a745";
             client.subscribe("smartswitch/" + deviceId + "/status");
             setTimeout(() => { sendCmd({ "get": 1 }); }, 500);
         }
         function onFail(e) {
             console.log("Connection Failed: " + e.errorMessage);
-            // If we were already logged in (control panel visible), just keep trying
             if (document.getElementById('controlPanel').style.display === 'block') {
                 let s = document.getElementById('connectionStatus');
                 if (s) s.innerText = "Retrying...";
@@ -579,7 +522,6 @@
                     client.connect({ onSuccess: onConnect, onFailure: onFail, useSSL: true, userName: mqtt_user, password: mqtt_pass });
                 }, 5000);
             } else {
-                // Initial login failure
                 alert("Connection Failed. Check Settings.");
                 document.getElementById('loginCard').style.display = 'block';
                 document.getElementById('connStatus').style.display = 'none';
@@ -592,12 +534,9 @@
                 if (s) {
                     s.innerText = "Reconnecting...";
                     s.className = "disconnected";
-                    s.style.color = "#fd7e14"; // Orange warning color
+                    s.style.color = "#fd7e14";
                 }
-
-                // Attempt Reconnect after 3 seconds
                 setTimeout(() => {
-                    console.log("Attempting Reconnect...");
                     if (!client.isConnected()) {
                         client.connect({ onSuccess: onConnect, onFailure: onFail, useSSL: true, userName: mqtt_user, password: mqtt_pass });
                     }
@@ -606,11 +545,10 @@
         }
 
         function onMessageArrived(message) {
-            if (window.updateLock) return; // Ignore updates while saving
+            if (window.updateLock) return;
             try {
                 let data = JSON.parse(message.payloadString);
 
-                // NEW: Check for explicit "online": false from LWT
                 if (data.online === false) {
                     showDeviceOffline();
                     return;
@@ -626,15 +564,12 @@
                 }
 
                 if (data.states || data.online === true) {
-                    showDeviceOnline(); // Enable UI
-
-                    // Verification Success: Show Control Panel
+                    showDeviceOnline();
                     document.getElementById('controlPanel').style.display = 'block';
                     document.getElementById('connStatus').style.display = 'none';
 
                     if (data.states) {
                         if (!window.ignoreUpdates) window.ignoreUpdates = [];
-                        // Merge server state, respecting optimistic locks
                         for (let i = 0; i < 8; i++) {
                             if (!window.ignoreUpdates[i] || Date.now() > window.ignoreUpdates[i]) {
                                 relayState[i] = data.states[i];
@@ -650,7 +585,13 @@
                         devInfo.expired = data.expired;
                         devInfo.daysLeft = data.daysLeft;
 
-                        // Sync Timezone Selection
+                        // FIXED: Check sActive to update the checkbox UI
+                        if (data.sActive !== undefined) {
+                            globalSchedActive = (data.sActive == 1);
+                            let master = document.getElementById('schedMaster');
+                            if (master) master.checked = globalSchedActive;
+                        }
+
                         if (data.gmt) {
                             let sel = document.getElementById('tzSelect');
                             if (sel && sel.value != data.gmt) sel.value = data.gmt;
@@ -664,11 +605,9 @@
                 }
                 if (data.schedules) {
                     schedules = data.schedules.filter(s => s.on || s.m > 0);
-                    globalSchedActive = (data.sActive == 1);
                     renderSchedules();
                 }
 
-                // Always update Info/Lock UI LAST to ensure any re-rendered elements (like timers) get locked
                 if (data.states || data.expired !== undefined) {
                     updateInfoUI();
                 }
@@ -678,8 +617,6 @@
 
         function showDeviceOffline() {
             document.getElementById('deviceOfflineBanner').style.display = 'block';
-
-            // Lock UI (Disable all inputs/buttons)
             let all = document.querySelectorAll('button, input');
             all.forEach(el => {
                 if (el.id !== 'refreshBtn') {
@@ -692,8 +629,6 @@
 
         function showDeviceOnline() {
             document.getElementById('deviceOfflineBanner').style.display = 'none';
-
-            // Unlock UI
             let all = document.querySelectorAll('button, input');
             all.forEach(el => {
                 el.disabled = false;
@@ -703,7 +638,6 @@
         }
 
         function updateHomeUI() {
-            // Guard: If offline, do not update UI (prevents unlocking buttons)
             if (document.getElementById('deviceOfflineBanner').style.display === 'block') return;
 
             for (let i = 0; i < 8; i++) {
@@ -714,11 +648,7 @@
                     let timerRunning = timerRem[i] > 0;
 
                     btn.className = on ? "relay-btn btn-on" : "relay-btn btn-off";
-
                     let badgeText = "OFF";
-
-                    // CHECKING STATE LOGIC (Matches Local)
-                    // If 'ready' flag is missing (old firmware), fallback to checking time string
                     let isReady = (devInfo.ready === 1) || (devInfo.ready === undefined && devInfo.time != "--:--");
 
                     if (!isReady) {
@@ -745,7 +675,6 @@
                         }
                     }
 
-                    // Update labels
                     if (relayLabels && relayLabels[i]) {
                         document.getElementById('lbl' + i).innerText = relayLabels[i];
                         let inp = document.getElementById('inpLbl' + i);
@@ -763,7 +692,6 @@
             let wText = "No WiFi";
             if (w) {
                 if (w < 0) {
-                    // RSSI Value (e.g. -65)
                     let qual = Math.min(Math.max(2 * (w + 100), 0), 100);
                     wText = `${qual}% (${w} dBm)`;
                 } else {
@@ -776,24 +704,45 @@
             let expCol = devInfo.expired ? "red" : "green";
             document.getElementById('infoLic').innerHTML = `<span style="color:${expCol}; font-weight:bold;">${expText}</span>`;
 
-            // Logic for Banners
             if (devInfo.expired) {
                 document.getElementById('expiryBanner').style.display = 'block';
                 document.getElementById('warnBanner').style.display = 'none';
+                setExpiryLock(true);
             } else if (devInfo.daysLeft <= 7 && devInfo.daysLeft >= 0) {
-                document.getElementById('expiryBanner').style.display = 'none'; // FIX: Ensure expiry is hidden
+                document.getElementById('expiryBanner').style.display = 'none';
                 document.getElementById('warnBanner').style.display = 'block';
                 document.getElementById('warnMsg').innerText = devInfo.daysLeft + " days remaining.";
+                setExpiryLock(false);
             } else {
                 document.getElementById('expiryBanner').style.display = 'none';
                 document.getElementById('warnBanner').style.display = 'none';
+                setExpiryLock(false);
             }
+        }
+
+        function setExpiryLock(expired) {
+            const els = document.querySelectorAll('button, input, select');
+            els.forEach(el => {
+                if (el.classList.contains('tab-btn')) return;
+                if (el.id === 'licInput') return;
+                if (el.id === 'btnLic') return;
+                if (el.classList.contains('login') || el.id === 'deviceIdInput' || el.id === 'devicePinInput') return;
+
+                el.disabled = expired;
+                if (expired) {
+                    el.style.opacity = "0.5";
+                    el.style.cursor = "not-allowed";
+                } else {
+                    el.style.opacity = "1";
+                    el.style.cursor = "pointer";
+                    if (el.tagName === 'INPUT') el.style.cursor = "text";
+                }
+            });
         }
 
         function sendCmd(payload) {
             if (!client || !client.isConnected()) return;
-            // payload['pin'] = savedPin; // Duplicate line removed
-            payload["pin"] = savedPin; // Secure PIN Injection
+            payload["pin"] = savedPin;
             let msg = new Paho.MQTT.Message(JSON.stringify(payload));
             msg.destinationName = "smartswitch/" + deviceId + "/set";
             client.send(msg);
@@ -805,11 +754,10 @@
             if (btn) {
                 btn.innerHTML = "⏳";
                 btn.style.opacity = "1";
-                // Remove previous background styles
                 btn.style.backgroundColor = "transparent";
                 btn.style.boxShadow = "none";
 
-                btn.style.pointerEvents = "none"; // Disable clicks without dimming
+                btn.style.pointerEvents = "none";
                 setTimeout(() => {
                     btn.innerHTML = "🔄";
                     btn.style.pointerEvents = "auto";
@@ -819,24 +767,18 @@
 
         function toggle(i) {
             if (devInfo.expired) { alert("License Expired. Remote control disabled."); return; }
-
-            // Optimistic UI: Update immediately
             relayState[i] = !relayState[i] ? 1 : 0;
             updateHomeUI();
-
-            // Lock incoming updates for this channel for 2 seconds
             if (!window.ignoreUpdates) window.ignoreUpdates = [];
             window.ignoreUpdates[i] = Date.now() + 2000;
-
             sendCmd({ "toggle": i });
         }
 
-        // Settings Logic
         function saveContextLabels() {
             if (devInfo.expired) { alert("License Expired. Remote control disabled."); return; }
             let payload = {};
             for (let i = 0; i < 8; i++) {
-                payload[String(i)] = document.getElementById('inpLbl' + i).value.substring(0, 15); // Max 15 chars
+                payload[String(i)] = document.getElementById('inpLbl' + i).value.substring(0, 15);
             }
             sendCmd({ "savLbl": payload });
             alert("Labels Sent! Waiting for update...");
@@ -850,7 +792,6 @@
         }
 
         function submitLic() {
-            // ALWAYS ALLOWED
             let val = document.getElementById('licInput').value.trim();
             if (val.length < 5) return;
             sendCmd({ "lic": val });
@@ -858,7 +799,7 @@
             alert("License Key Sent! Check Info status.");
         }
 
-        function enableSaveTz() { /* visual effect? */ }
+        function enableSaveTz() { }
 
         // --- UNIFIED TIMER LOGIC ---
         function renderTimers() {
@@ -873,7 +814,6 @@
                 let btnBg = t.enabled ? "#17a2b8" : "#6c757d";
                 let btnAction = `runTimer(${i})`;
 
-                // Check if running (Cloud status check)
                 let isRunning = false;
                 for (let r = 0; r < 8; r++) { if (((t.mask >> r) & 1) && timerRem[r] > 0) isRunning = true; }
 
@@ -915,7 +855,7 @@
             if (confirm("Delete this preset?")) {
                 timerPresets.splice(i, 1);
                 renderTimers();
-                saveTimers(true); // Auto-save
+                saveTimers(true);
             }
         }
 
@@ -930,18 +870,15 @@
 
         function sendBatchCmd(list, successMsg, silent) {
             if (!list || list.length === 0) return;
-            updateLock = true; // Lock UI from server updates
+            updateLock = true;
             let index = 0;
             function next() {
                 if (index < list.length) {
                     sendCmd(list[index]);
                     index++;
-                    // Increased delay to 400ms to allow Firmware Flash Write to complete
-                    // Default Preferences write is blocking and slow on ESP32
                     setTimeout(next, 400);
                 } else {
                     if (!silent && successMsg) alert(successMsg);
-                    // Hold lock for 2.5s to allow device state to settle
                     setTimeout(() => { updateLock = false; console.log("Unlock"); }, 2500);
                 }
             }
@@ -968,7 +905,6 @@
             let t = timerPresets[i];
             if (!t.mask) { alert("Select switches first!"); return; }
 
-            // Optimistic UI
             if (!window.ignoreUpdates) window.ignoreUpdates = [];
             for (let r = 0; r < 8; r++) {
                 if (((t.mask >> r) & 1)) {
@@ -977,14 +913,12 @@
                     window.ignoreUpdates[r] = Date.now() + 2500;
                 }
             }
-            updateHomeUI(); // Instant Relay Visuals
-            renderTimers(); // Instant Start->Stop Button Swap
+            updateHomeUI();
+            renderTimers();
 
-            // Command Logic
             let payloads = [];
             payloads.push({ "timerSave": { "i": i, "min": t.min, "mask": t.mask, "en": t.enabled } });
 
-            // Send save then run
             updateLock = true;
             sendCmd(payloads[0]);
             setTimeout(() => {
@@ -995,26 +929,25 @@
 
         function stopTimer(i) {
             let t = timerPresets[i];
-
-            // Optimistic UI
             if (!window.ignoreUpdates) window.ignoreUpdates = [];
             for (let r = 0; r < 8; r++) {
                 if (((t.mask >> r) & 1)) {
-                    relayState[r] = 0; // Assumption: Stop turns off
+                    relayState[r] = 0;
                     timerRem[r] = 0;
                     window.ignoreUpdates[r] = Date.now() + 2500;
                 }
             }
             updateHomeUI();
             renderTimers();
-
             sendCmd({ "stopTimer": { "mask": t.mask } });
         }
 
 
         // --- UNIFIED SCHEDULE LOGIC ---
         function renderSchedules() {
+            // Checkbox sync
             document.getElementById('schedMaster').checked = globalSchedActive;
+
             let html = "";
             if (schedules.length === 0) html = "<div style='color:#777; font-style:italic; text-align:center;'>No schedules set. Click '+ Add Schedule'.</div>";
 
@@ -1041,9 +974,6 @@
             });
             document.getElementById('scheduleList').innerHTML = html;
         }
-
-        // Helpers for Schedule
-        function updateSchedTime(i, type, val) { /* Deprecated/Superseded by updS? No, updS defined below covers it */ }
 
         function addSched() {
             if (schedules.length >= 6) { alert("Max 6 schedules allowed!"); return; }
@@ -1077,8 +1007,10 @@
             if (devInfo.expired) { alert("License Expired."); return; }
 
             let payloads = [];
+            // FIXED: Using "schedGlobal" key to match ESP32 code
             let master = document.getElementById('schedMaster').checked;
-            payloads.push({ "schedActive": master ? 1 : 0 });
+            globalSchedActive = master; // Optimistic update
+            payloads.push({ "schedGlobal": master ? 1 : 0 });
 
             for (let i = 0; i < 6; i++) {
                 if (i < schedules.length) {
@@ -1086,8 +1018,6 @@
                     if (s.on && s.m === 0 && !silent) { alert("Schedule #" + (i + 1) + " has no switches selected!"); return; }
                     payloads.push({ "schedSave": { "i": i, "sH": s.sH, "sM": s.sM, "eH": s.eH, "eM": s.eM, "m": s.m, "on": s.on ? 1 : 0 } });
                 } else {
-                    // Use 'schedDel' command for explicit deletion/clearing of unused slots
-                    // This avoids parsing heavy payloads on the firmware side for empty slots
                     payloads.push({ "schedDel": i });
                 }
             }
@@ -1096,7 +1026,6 @@
 
         function pad(n) { return (n < 10 ? '0' : '') + n; }
 
-        // Interactive Checkbox Mask Renderer
         function renderRelayMask(context, index, currentMask) {
             let html = `<div class="chk-group" style="justify-content:center; gap:10px; margin-bottom:10px; display:flex; flex-wrap:wrap;">`;
             for (let r = 0; r < 8; r++) {
@@ -1126,39 +1055,16 @@
             }
         }
 
-        // Assuming onMessageArrived exists elsewhere in the full document,
-        // these modifications are applied to the relevant sections within it.
-        // --- FULL STATE SYNC ---
-        // Timers
-        // if (data.timers) {
-        //     timerPresets = data.timers.filter(t => t.min > 0 || t.mask > 0 || t.enabled);
-        //     renderTimers();
-        // }
-
-        // Schedules
-        // if (data.schedules) {
-        //     if (data.sActive !== undefined) globalSchedActive = (data.sActive == 1);
-        //     schedules = data.schedules.filter(s => s.on || s.m > 0);
-        //     renderSchedules();
-        // }
-        // -----------------------
-
-        // --- DYNAMIC TIMER COUNTDOWN ---
         setInterval(() => {
             let needsUpdate = false;
-            // Iterate over all 8 channels
             for (let i = 0; i < 8; i++) {
                 if (timerRem[i] > 0) {
-                    timerRem[i]--; // Decrement local counter
+                    timerRem[i]--;
                     needsUpdate = true;
-                    // If it hit 0 locally, we can optionally wait for server confirmation 
-                    // or just show OFF. The UI logic handles 0 as OFF.
                 }
             }
             if (needsUpdate) {
-                updateHomeUI(); // Refresh badges (5m -> 4m etc)
-
-                // Also refresh Timer Presets if Start/Stop buttons depend on status
+                updateHomeUI();
                 if (window.timerPresets) renderTimers();
             }
         }, 1000);
