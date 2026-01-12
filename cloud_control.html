@@ -163,6 +163,14 @@
             box-sizing: border-box;
         }
 
+        input[type="checkbox"] {
+            accent-color: var(--primary);
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            vertical-align: middle;
+        }
+
         button.login {
             background: var(--primary);
             color: white;
@@ -349,7 +357,7 @@
                         onclick="addTimer()">+ Add Timer</button>
                 </div>
                 <div id="timerList"></div>
-                <button class="action-btn" onclick="saveTimers()">Save Timer Presets</button>
+                <button class="action-btn" onclick="saveTimers()" style="width:100%">Save Timer Presets</button>
             </div>
 
             <div class="card">
@@ -367,7 +375,7 @@
                     </label>
                 </div>
                 <div id="scheduleList"></div>
-                <button class="action-btn" onclick="saveAllSchedules()">Save All Schedules</button>
+                <button class="action-btn" onclick="saveAllSchedules()" style="width:100%">Save All Schedules</button>
             </div>
         </div>
 
@@ -1031,7 +1039,7 @@
                 let checked = ((currentMask >> r) & 1) ? "checked" : "";
                 let lbl = relayLabels[r] ? relayLabels[r] : ("S" + (r + 1));
 
-                html += `<label style="display:flex; align-items:center; gap:4px; font-size:0.9rem; cursor:pointer;">
+                html += `<label style="display:flex; align-items:center; gap:6px; font-size:0.95rem; font-weight:bold; cursor:pointer;">
                     <input type="checkbox" ${checked} onchange="handleMaskClick('${context}', ${index}, ${r}, this.checked)"> 
                     ${lbl}
                 </label>`;
