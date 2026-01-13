@@ -876,6 +876,7 @@
             if (timerPresets.length === 0) html = "<div style='color:#777; font-style:italic; text-align:center;'>No timer presets. Click '+ Add Timer'.</div>";
 
             timerPresets.forEach((t, i) => {
+                if (i >= maxCh) return; // Hide disabled channels
                 let disabledState = t.enabled ? "" : "disabled='true'";
                 let opacity = t.enabled ? "1" : "0.7";
 
@@ -1022,6 +1023,7 @@
             if (schedules.length === 0) html = "<div style='color:#777; font-style:italic; text-align:center;'>No schedules set. Click '+ Add Schedule'.</div>";
 
             schedules.forEach((s, i) => {
+                if (i >= maxCh) return; // Hide disabled channels
                 let sTime = pad(s.sH) + ":" + pad(s.sM);
                 let eTime = pad(s.eH) + ":" + pad(s.eM);
                 let opacity = s.on ? "1" : "0.7";
