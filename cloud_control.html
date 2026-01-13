@@ -47,20 +47,20 @@
         }
 
         .btn-container {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
             gap: 10px;
-        }
-
-        @media (min-width: 480px) {
-            .btn-container {
-                grid-template-columns: repeat(4, 1fr);
-            }
         }
 
         /* FIXED BUTTON STYLING TO MATCH .INO EXACTLY */
         .relay-btn {
+            /* Mobile: 2 per row */
+            flex: 0 0 calc(50% - 5px);
+            max-width: calc(50% - 5px);
+
             width: 100%;
+            /* Fallback */
             height: 135px !important;
             min-height: 135px !important;
             max-height: 135px !important;
@@ -79,6 +79,13 @@
             padding: 10px 4px;
             overflow: hidden;
             position: relative;
+        }
+
+        @media (min-width: 480px) {
+            .relay-btn {
+                flex: 0 0 calc(25% - 8px);
+                max-width: calc(25% - 8px);
+            }
         }
 
         .relay-btn:active {
@@ -359,6 +366,7 @@
                     <button class="action-btn" style="width:auto; margin:0; padding:6px 12px; background:#28a745;"
                         onclick="addTimer()">+ Add Timer</button>
                 </div>
+
                 <div id="timerList"></div>
                 <button class="action-btn" onclick="saveTimers()" style="width:100%">Save Timer Presets</button>
             </div>
@@ -369,6 +377,7 @@
                     <button class="action-btn" style="width:auto; margin:0; padding:6px 12px; background:#28a745;"
                         onclick="addSched()">+ Add Schedule</button>
                 </div>
+
                 <div style="margin:10px 0;">
                     <label
                         style="font-weight:bold; font-size:1.1rem; display:flex; align-items:center; justify-content:center; gap:10px; cursor:pointer;">
@@ -403,8 +412,21 @@
             </div>
 
             <div class="card">
-                <h2>🌍 Time & License</h2>
+                <h2>🌍 System Config</h2>
+
+                <label class="input-label">Active Channels</label>
+                <div style="display:flex; gap:5px;">
+                    <select id="chSet" class="full-width">
+                        <option value="2">2 Channels</option>
+                        <option value="4">4 Channels</option>
+                        <option value="6">6 Channels</option>
+                        <option value="8">8 Channels</option>
+                    </select>
+                    <button class="action-btn" onclick="saveCh()" style="margin:0;">Set</button>
+                </div>
+
                 <label class="input-label">Timezone (Offset Seconds)</label>
+
                 <div style="display:flex; gap:5px;">
                     <select id="tzSelect" class="full-width" onchange="enableSaveTz()">
                         <!-- Populated by JS -->
@@ -438,7 +460,9 @@
         let timerRem = [];
         let relayLabels = [];
         let schedActive = [];
+        let maxCh = 8;
         let devInfo = { time: "", ip: "", wifi: 0, expired: 0, daysLeft: 0 };
+
 
         if (localStorage.getItem("lastDid")) document.getElementById('deviceIdInput').value = localStorage.getItem("lastDid");
         if (localStorage.getItem('lastPin') && document.getElementById('devicePinInput')) document.getElementById('devicePinInput').value = localStorage.getItem('lastPin');
@@ -450,8 +474,9 @@
 
             let htR = "";
             let htL = "";
-            for (let i = 0; i < 8; i++) {
+            for (let i = 0; i < maxCh; i++) {
                 // FIXED STRUCTURE TO MATCH .INO EXACTLY
+
                 htR += `<button id="btn${i}" class="relay-btn btn-off" onclick="toggle(${i})">`;
                 htR += `<span class="btn-label" id="lbl${i}">S${i + 1}</span>`;
                 htR += `<span class="status-badge">WAITING...</span>`;
@@ -627,8 +652,20 @@
                             let sel = document.getElementById('tzSelect');
                             if (sel && sel.value != data.gmt) sel.value = data.gmt;
                         }
+
+                        if (data.ch && data.ch != maxCh) {
+                            maxCh = data.ch;
+                            initUI(); // Re-render
+                            updateHomeUI();
+                        }
+                        if (data.ch) {
+                            let s = document.getElementById('chSet');
+                            if (s) s.value = data.ch;
+                        }
+
                         updateHomeUI();
                     }
+
                 }
                 if (data.timers) {
                     timerPresets = data.timers.filter(t => t.min > 0 || t.mask > 0 || t.enabled);
@@ -671,8 +708,9 @@
         function updateHomeUI() {
             if (document.getElementById('deviceOfflineBanner').style.display === 'block') return;
 
-            for (let i = 0; i < 8; i++) {
+            for (let i = 0; i < maxCh; i++) {
                 let btn = document.getElementById('btn' + i);
+
                 if (btn) {
                     let on = relayState[i] == 1;
                     let isSched = schedActive[i] == 1;
@@ -877,7 +915,8 @@
         }
 
         function addTimer() {
-            if (timerPresets.length >= 6) { alert("Max 6 presets allowed!"); return; }
+            if (timerPresets.length >= maxCh) { alert("Max " + maxCh + " presets allowed!"); return; }
+
             timerPresets.push({ min: 10, mask: 0, enabled: 1 });
             renderTimers();
         }
@@ -1007,7 +1046,8 @@
         }
 
         function addSched() {
-            if (schedules.length >= 6) { alert("Max 6 schedules allowed!"); return; }
+            if (schedules.length >= maxCh) { alert("Max " + maxCh + " schedules allowed!"); return; }
+
             schedules.push({ sH: 18, sM: 0, eH: 22, eM: 0, m: 0, on: 1 });
             renderSchedules();
         }
@@ -1075,7 +1115,8 @@
 
         function renderRelayMask(context, index, currentMask) {
             let html = `<div class="chk-group" style="justify-content:center; gap:10px; margin-bottom:10px; display:flex; flex-wrap:wrap;">`;
-            for (let r = 0; r < 8; r++) {
+            for (let r = 0; r < maxCh; r++) {
+
                 let checked = ((currentMask >> r) & 1) ? "checked" : "";
                 let lbl = relayLabels[r] ? relayLabels[r] : ("S" + (r + 1));
 
@@ -1102,9 +1143,17 @@
             }
         }
 
+        function saveCh() {
+            let val = document.getElementById('chSet').value;
+            sendCmd({ "ch": parseInt(val) });
+            alert("Channel Setting Sent! Device will update shortly.");
+        }
+
+
         setInterval(() => {
             let needsUpdate = false;
-            for (let i = 0; i < 8; i++) {
+            for (let i = 0; i < maxCh; i++) {
+
                 if (timerRem[i] > 0) {
                     timerRem[i]--;
                     needsUpdate = true;
