@@ -242,7 +242,7 @@
             background: #ddd;
             cursor: pointer;
             font-weight: bold;
-            border-radius: 8px 8px 0 0;
+            border-radius: 12px;
             color: #555;
         }
 
@@ -376,6 +376,8 @@
                 </div>
                 <div id="scheduleList"></div>
                 <button class="action-btn" onclick="saveAllSchedules()" style="width:100%">Save All Schedules</button>
+                <div id="schedMsg"
+                    style="margin-top:10px; font-weight:bold; color:#007bff; text-align:center; min-height:24px;"></div>
             </div>
         </div>
 
@@ -597,6 +599,25 @@
                             globalSchedActive = (data.sActive == 1);
                             let master = document.getElementById('schedMaster');
                             if (master) master.checked = globalSchedActive;
+
+                            // Update Message
+                            let msg = document.getElementById('schedMsg');
+                            if (msg) {
+                                if (!globalSchedActive) {
+                                    msg.innerText = "Global Schedule Disabled";
+                                    msg.style.color = "#007bff";
+                                } else {
+                                    // Count active from received data if available, or current
+                                    let count = 0;
+                                    if (data.schedules) {
+                                        data.schedules.forEach(s => { if (s.on) count++; });
+                                    } else {
+                                        schedules.forEach(s => { if (s.on) count++; });
+                                    }
+                                    msg.innerText = count + " Active Schedule(s)";
+                                    msg.style.color = "#007bff";
+                                }
+                            }
                         }
 
                         if (data.gmt) {
@@ -1013,16 +1034,32 @@
         function saveAllSchedules(silent) {
             if (devInfo.expired) { alert("License Expired."); return; }
 
-            let payloads = [];
             // FIXED: Using "schedGlobal" key to match ESP32 code
             let master = document.getElementById('schedMaster').checked;
             globalSchedActive = master; // Optimistic update
+
+            // UPDATE UI MESSAGE
+            let msg = document.getElementById('schedMsg');
+            if (msg) {
+                if (!master) {
+                    msg.innerText = "Global Schedule Disabled";
+                    msg.style.color = "#007bff";
+                } else {
+                    let count = 0;
+                    schedules.forEach(s => { if (s.on) count++; });
+                    msg.innerText = count + " Active Schedule(s)";
+                    msg.style.color = "#007bff";
+                }
+            }
+
+            let payloads = [];
             payloads.push({ "schedGlobal": master ? 1 : 0 });
 
             for (let i = 0; i < 6; i++) {
                 if (i < schedules.length) {
                     let s = schedules[i];
-                    if (s.on && s.m === 0 && !silent) { alert("Schedule #" + (i + 1) + " has no switches selected!"); return; }
+                    // Only validate if Global Schedule is ACTIVE
+                    if (master && s.on && s.m === 0 && !silent) { alert("Schedule #" + (i + 1) + " has no switches selected!"); return; }
                     payloads.push({ "schedSave": { "i": i, "sH": s.sH, "sM": s.sM, "eH": s.eH, "eM": s.eM, "m": s.m, "on": s.on ? 1 : 0 } });
                 } else {
                     payloads.push({ "schedDel": i });
