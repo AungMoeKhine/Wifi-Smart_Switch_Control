@@ -411,9 +411,13 @@
                 <label class="input-label">Active Channels</label>
                 <div style="display:flex; gap:5px;">
                     <select id="chSet" class="full-width">
+                        <option value="1">1 Channel</option>
                         <option value="2">2 Channels</option>
+                        <option value="3">3 Channels</option>
                         <option value="4">4 Channels</option>
+                        <option value="5">5 Channels</option>
                         <option value="6">6 Channels</option>
+                        <option value="7">7 Channels</option>
                         <option value="8">8 Channels</option>
                     </select>
                     <button class="action-btn" onclick="saveCh()" style="margin:0;">Set</button>
@@ -831,6 +835,12 @@
             let val = document.getElementById('tzSelect').value;
             sendCmd({ "tz": parseInt(val) });
             alert("Timezone Sent!");
+        }
+
+        function saveCh() {
+            let val = document.getElementById('chSet').value;
+            sendCmd({ "ch": parseInt(val) });
+            alert("Channel Setting Sent! Device will update shortly.");
         }
 
         function submitLic() {
