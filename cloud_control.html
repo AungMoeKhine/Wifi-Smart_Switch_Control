@@ -53,14 +53,10 @@
             gap: 10px;
         }
 
-        /* FIXED BUTTON STYLING TO MATCH .INO EXACTLY */
         .relay-btn {
-            /* Mobile: 2 per row */
             flex: 0 0 calc(50% - 5px);
             max-width: calc(50% - 5px);
-
             width: 100%;
-            /* Fallback */
             height: 135px !important;
             min-height: 135px !important;
             max-height: 135px !important;
@@ -74,7 +70,6 @@
             flex-direction: column;
             align-items: center;
             justify-content: flex-start;
-            /* Stack from top, not center */
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
             padding: 10px 4px;
             overflow: hidden;
@@ -103,20 +98,16 @@
             opacity: 0.9;
         }
 
-        /* FIXED LABEL STYLING */
         .btn-label {
             font-size: 0.95rem;
             font-weight: 700;
             line-height: 1.2;
             width: 100%;
             min-height: 2.4em;
-            /* Force height equal to 2 lines */
             display: flex;
             align-items: center;
-            /* Center 1-line text vertically in the 2-line space */
             justify-content: center;
             margin-bottom: 8px;
-            /* Consistent gap to badge */
             word-wrap: break-word;
         }
 
@@ -131,7 +122,6 @@
             gap: 4px;
         }
 
-        /* TIMER DISPLAY CLASS FROM .INO */
         .timer-display {
             font-weight: bold;
             color: #ffc107;
@@ -170,15 +160,27 @@
             box-sizing: border-box;
         }
 
-        input[type="checkbox"] {
-            accent-color: var(--primary);
+        /* Checkbox Alignment Match */
+        .sched-master-label {
+            display: flex !important;
+            flex-direction: row !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 12px;
+            font-size: 1.1rem;
+            font-weight: bold;
             cursor: pointer;
-            vertical-align: middle;
+            color: #333;
         }
 
-        #schedMaster {
-            width: 20px;
-            height: 20px;
+        .sched-master-label input[type="checkbox"] {
+            width: auto !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            height: 20px !important;
+            flex-shrink: 0;
+            accent-color: var(--primary);
+            cursor: pointer;
         }
 
         button.login {
@@ -235,7 +237,6 @@
             font-weight: bold;
         }
 
-        /* Tab Styles */
         .tab-nav {
             display: flex;
             justify-content: center;
@@ -296,9 +297,7 @@
 <body ontouchstart="">
 
     <div class="card login-card" id="loginCard">
-        <!-- AMK Logo Placeholder (SVG) -->
         <div style="margin-bottom:15px; display:flex; justify-content:center;">
-            <!-- Removed background, border, and border-radius to make it fully transparent -->
             <div style="width:120px; height:120px; display:flex; align-items:center; justify-content:center;">
                 <img src="logo.png" alt="Logo" style="width:100%; height:100%; object-fit: contain;">
             </div>
@@ -323,14 +322,12 @@
             <div id="connectionStatus" class="disconnected">Disconnected</div>
         </div>
 
-        <!-- Device Offline Banner (Cloud Connected, Device Missing) -->
         <div id="deviceOfflineBanner"
             style="display:none; background:#343a40; color:white; padding:15px; border-radius:12px; margin-bottom:15px; font-weight:bold; max-width: 450px; margin: 0 auto 15px auto; border: 2px solid #dc3545;">
             📡 DEVICE OFFLINE 📡<br>
             <span style="font-size:0.8rem; font-weight:normal; color:#ddd;">Check Power or Wi-Fi Connection</span>
         </div>
 
-        <!-- Validity Banner -->
         <div id="expiryBanner"
             style="display:none; background:#dc3545; color:white; padding:15px; border-radius:12px; margin-bottom:15px; font-weight:bold; max-width: 450px; margin: 0 auto 15px auto;">
             ⚠️ CLOUD SERVICES EXPIRED ⚠️<br>
@@ -338,7 +335,6 @@
                 remains active.</span>
         </div>
 
-        <!-- Warning Banner -->
         <div id="warnBanner"
             style="display:none; background:#ffc107; color:#333; padding:15px; border-radius:12px; margin-bottom:15px; font-weight:bold; max-width: 450px; margin: 0 auto 15px auto;">
             ⚠️ SUBSCRIPTION ENDING SOON ⚠️<br>
@@ -379,9 +375,7 @@
                 </div>
 
                 <div style="margin:10px 0;">
-                    <label
-                        style="font-weight:bold; font-size:1.1rem; display:flex; align-items:center; justify-content:center; gap:10px; cursor:pointer;">
-                        <!-- FIXED: Removed invalid toggleMaster() function, now calls saveAllSchedules directly -->
+                    <label class="sched-master-label">
                         <input type="checkbox" id="schedMaster" onchange="saveAllSchedules(true);">
                         Global Schedule Active
                     </label>
@@ -449,7 +443,7 @@
         let client;
         let deviceId;
         const mqtt_broker = "210195b635414206adcd944325fe6f59.s1.eu.hivemq.cloud";
-        const mqtt_port = 8884; // SSL Port
+        const mqtt_port = 8884;
         const mqtt_user = "my_switch";
         const mqtt_pass = "My_password123";
 
@@ -475,8 +469,6 @@
             let htR = "";
             let htL = "";
             for (let i = 0; i < maxCh; i++) {
-                // FIXED STRUCTURE TO MATCH .INO EXACTLY
-
                 htR += `<button id="btn${i}" class="relay-btn btn-off" onclick="toggle(${i})">`;
                 htR += `<span class="btn-label" id="lbl${i}">S${i + 1}</span>`;
                 htR += `<span class="status-badge">WAITING...</span>`;
@@ -622,32 +614,6 @@
                         devInfo.expired = data.expired;
                         devInfo.daysLeft = data.daysLeft;
 
-                        // FIXED: Check sActive to update the checkbox UI
-                        if (data.sActive !== undefined) {
-                            globalSchedActive = (data.sActive == 1);
-                            let master = document.getElementById('schedMaster');
-                            if (master) master.checked = globalSchedActive;
-
-                            // Update Message
-                            let msg = document.getElementById('schedMsg');
-                            if (msg) {
-                                if (!globalSchedActive) {
-                                    msg.innerText = "Global Schedule Disabled";
-                                    msg.style.color = "#007bff";
-                                } else {
-                                    // Count active from received data if available, or current
-                                    let count = 0;
-                                    if (data.schedules) {
-                                        data.schedules.forEach(s => { if (s.on) count++; });
-                                    } else {
-                                        schedules.forEach(s => { if (s.on) count++; });
-                                    }
-                                    msg.innerText = count + " Active Schedule(s)";
-                                    msg.style.color = "#007bff";
-                                }
-                            }
-                        }
-
                         if (data.gmt) {
                             let sel = document.getElementById('tzSelect');
                             if (sel && sel.value != data.gmt) sel.value = data.gmt;
@@ -672,7 +638,14 @@
                     renderTimers();
                 }
                 if (data.schedules) {
-                    schedules = data.schedules.filter(s => s.on || s.m > 0);
+                    // Filter out invalid schedules (0-duration or invalid time)
+                    schedules = data.schedules.filter(s => {
+                        let isZeroDuration = (s.sH === s.eH && s.sM === s.eM);
+                        let isInvalidTime = (s.sH > 23 || s.sM > 59 || s.eH > 23 || s.eM > 59);
+                        let isEmpty = (s.on === 0 && s.m === 0);
+                        return (s.on || s.m > 0) && !(isZeroDuration || isInvalidTime || isEmpty);
+                    });
+                    if (data.sActive !== undefined) globalSchedActive = (data.sActive == 1);
                     renderSchedules();
                 }
 
@@ -1019,6 +992,49 @@
             // Checkbox sync
             document.getElementById('schedMaster').checked = globalSchedActive;
 
+            // --- FIXED: ADDED VISIBILITY FILTER TO MESSAGE LOGIC ---
+            let msg = document.getElementById('schedMsg');
+            if (msg) {
+                if (!globalSchedActive) {
+                    msg.innerText = "Global Schedule Disabled";
+                    msg.style.color = "#007bff";
+                } else {
+                    // Create a mask to only check currently VISIBLE channels (e.g. 4ch = 00001111)
+                    let visibleChannelsMask = (1 << maxCh) - 1;
+
+                    let count = 0;
+                    let activeTotalMask = 0;
+
+                    schedules.forEach(s => {
+                        // A schedule is counted if it's ON and triggers at least one VISIBLE channel
+                        if (s.on && s.m !== 0) {
+                            let effectiveMask = s.m & visibleChannelsMask;
+                            if (effectiveMask > 0) {
+                                count++;
+                                activeTotalMask |= effectiveMask;
+                            }
+                        }
+                    });
+
+                    let activeSwitches = [];
+                    // Only iterate up to maxCh to list switches
+                    for (let i = 0; i < maxCh; i++) {
+                        if ((activeTotalMask >> i) & 1) {
+                            let lbl = (relayLabels && relayLabels[i]) ? relayLabels[i] : ("S" + (i + 1));
+                            activeSwitches.push(lbl);
+                        }
+                    }
+
+                    if (count > 0) {
+                        msg.innerText = count + " Active Schedule(s) (Switches: " + activeSwitches.join(", ") + ")";
+                    } else {
+                        msg.innerText = "0 Active Schedule(s)";
+                    }
+                    msg.style.color = "#007bff";
+                }
+            }
+            // --------------------------------------------------
+
             let html = "";
             if (schedules.length === 0) html = "<div style='color:#777; font-style:italic; text-align:center;'>No schedules set. Click '+ Add Schedule'.</div>";
 
@@ -1083,24 +1099,13 @@
             let master = document.getElementById('schedMaster').checked;
             globalSchedActive = master; // Optimistic update
 
-            // UPDATE UI MESSAGE
-            let msg = document.getElementById('schedMsg');
-            if (msg) {
-                if (!master) {
-                    msg.innerText = "Global Schedule Disabled";
-                    msg.style.color = "#007bff";
-                } else {
-                    let count = 0;
-                    schedules.forEach(s => { if (s.on) count++; });
-                    msg.innerText = count + " Active Schedule(s)";
-                    msg.style.color = "#007bff";
-                }
-            }
+            // FIXED: RE-RENDER TO UPDATE MESSAGE INSTANTLY
+            renderSchedules();
 
             let payloads = [];
             payloads.push({ "schedGlobal": master ? 1 : 0 });
 
-            for (let i = 0; i < 6; i++) {
+            for (let i = 0; i < maxCh; i++) {
                 if (i < schedules.length) {
                     let s = schedules[i];
                     // Only validate if Global Schedule is ACTIVE
