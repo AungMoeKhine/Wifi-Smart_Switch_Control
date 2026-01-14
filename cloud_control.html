@@ -959,7 +959,7 @@
             if (!t.mask) { alert("Select switches first!"); return; }
 
             if (!window.ignoreUpdates) window.ignoreUpdates = [];
-            for (let r = 0; r < 8; r++) {
+            for (let r = 0; r < maxCh; r++) {
                 if (((t.mask >> r) & 1)) {
                     relayState[r] = 1;
                     timerRem[r] = t.min * 60;
@@ -983,7 +983,7 @@
         function stopTimer(i) {
             let t = timerPresets[i];
             if (!window.ignoreUpdates) window.ignoreUpdates = [];
-            for (let r = 0; r < 8; r++) {
+            for (let r = 0; r < maxCh; r++) {
                 if (((t.mask >> r) & 1)) {
                     relayState[r] = 0;
                     timerRem[r] = 0;
