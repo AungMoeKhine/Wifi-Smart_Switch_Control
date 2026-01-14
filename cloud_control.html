@@ -401,7 +401,7 @@
             <div class="card">
                 <h2>🏷️ Switch Labels</h2>
                 <p style="font-size:0.8rem; color:#666; margin-top:-10px;">Rename your switches (e.g., Living Room)</p>
-                <div id="labelInputs"></div>
+                <div id="labelInputs" style="display:flex; flex-wrap:wrap; justify-content:center; gap:10px;"></div>
                 <button class="action-btn" onclick="saveContextLabels()">Save Labels</button>
             </div>
 
@@ -479,8 +479,7 @@
                 htR += `<div id="td${i}" class="timer-display"></div>`;
                 htR += `</button>`;
 
-                htL += `<div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
-            <b style="width:30px;">S${i + 1}</b>
+                htL += `<div style="display:flex; align-items:center; gap:10px; margin-bottom:8px; width:45%; min-width:140px;">
             <input type="text" id="inpLbl${i}" class="full-width" placeholder="Switch ${i + 1}" value="S${i + 1}">
          </div>`;
             }
