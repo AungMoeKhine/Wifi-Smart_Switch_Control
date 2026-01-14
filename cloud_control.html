@@ -1072,6 +1072,25 @@
             document.getElementById('scheduleList').innerHTML = html;
         }
 
+        function saveContextLabels() {
+            if (devInfo.expired) { alert("License Expired."); return; }
+            let payloads = [];
+            for (let i = 0; i < maxCh; i++) {
+                let el = document.getElementById('inpLbl' + i);
+                if (el) {
+                    let val = el.value.trim();
+                    if (val.length === 0) val = "S" + (i + 1);
+                    payloads.push({ "lbl": { "i": i, "val": val } });
+                    // Optimistic update
+                    relayLabels[i] = val;
+                    // Update UI button labels
+                    let btnLbl = document.getElementById('lbl' + i);
+                    if (btnLbl) btnLbl.innerText = val;
+                }
+            }
+            sendBatchCmd(payloads, "Labels Saved!", false);
+        }
+
         function addSched() {
             if (schedules.length >= maxCh) { alert("Max " + maxCh + " schedules allowed!"); return; }
 
