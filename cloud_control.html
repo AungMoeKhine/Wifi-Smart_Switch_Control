@@ -325,6 +325,13 @@
             color: white;
             box-shadow: 0 2px 4px rgba(0, 123, 255, 0.3);
         }
+
+        .sched-disabled {
+            opacity: 0.5;
+            pointer-events: none;
+            filter: grayscale(50%);
+            transition: all 0.3s ease;
+        }
     </style>
 </head>
 
@@ -404,8 +411,9 @@
             <div class="card">
                 <h2>📅 Schedules</h2>
                 <div style="margin: 10px 0; display:flex; justify-content:center; gap:15px; align-items:center;">
-                    <button class="action-btn" style="width:auto; margin:0; padding:6px 12px; background:#28a745;"
-                        onclick="addSched()">+ Add Schedule</button>
+                    <button id="addSchedBtn" class="action-btn"
+                        style="width:auto; margin:0; padding:6px 12px; background:#28a745;" onclick="addSched()">+ Add
+                        Schedule</button>
                 </div>
 
                 <div style="margin:10px 0;">
@@ -415,7 +423,8 @@
                     </label>
                 </div>
                 <div id="scheduleList"></div>
-                <button class="action-btn" onclick="saveAllSchedules()" style="width:100%">Save All Schedules</button>
+                <button id="saveSchedBtn" class="action-btn" onclick="saveAllSchedules()" style="width:100%">Save All
+                    Schedules</button>
                 <div id="schedMsg"
                     style="margin-top:10px; font-weight:bold; color:#007bff; text-align:center; min-height:24px;"></div>
             </div>
@@ -1034,6 +1043,15 @@
         function renderSchedules() {
             // Checkbox sync
             document.getElementById('schedMaster').checked = globalSchedActive;
+
+            // Lock & Dim Logic
+            let list = document.getElementById('scheduleList');
+            if (list) list.className = globalSchedActive ? "" : "sched-disabled";
+
+            let addBtn = document.getElementById('addSchedBtn');
+            let saveBtn = document.getElementById('saveSchedBtn');
+            if (addBtn) addBtn.disabled = !globalSchedActive;
+            if (saveBtn) saveBtn.disabled = !globalSchedActive;
 
             // --- FIXED: ADDED VISIBILITY FILTER TO MESSAGE LOGIC ---
             let msg = document.getElementById('schedMsg');
