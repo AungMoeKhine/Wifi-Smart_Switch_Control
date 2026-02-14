@@ -291,6 +291,40 @@
             border-bottom: 1px solid #eee;
             font-size: 0.9rem;
         }
+
+        /* Day Selection UI Styles */
+        .day-wrap {
+            display: flex;
+            justify-content: center;
+            gap: 5px;
+            margin: 10px 0;
+        }
+
+        .day-chk {
+            display: none;
+        }
+
+        .day-lbl {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: #eee;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: bold;
+            color: #666;
+            transition: all 0.2s;
+            user-select: none;
+        }
+
+        .day-chk:checked+.day-lbl {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 2px 4px rgba(0, 123, 255, 0.3);
+        }
     </style>
 </head>
 
@@ -1066,6 +1100,17 @@
                 <span style="align-self:center">to</span>
                 <input type="time" value="${eTime}" onchange="updS(${i}, 'e', this.value)" style="border:1px solid #ddd; border-radius:4px; padding:4px;">
              </div>
+             
+             <!-- Day selection UI -->
+             <div class="day-wrap">`;
+                let dayNames = ["S", "M", "T", "W", "T", "F", "S"];
+                for (let d = 0; d < 7; d++) {
+                    let isSel = ((s.d === undefined ? 127 : s.d) >> d) & 1;
+                    html += `<input type="checkbox" id="sd${i}_${d}" class="day-chk" ${isSel ? "checked" : ""} onchange="updS(${i},'d${d}',this.checked)">`;
+                    html += `<label for="sd${i}_${d}" class="day-lbl">${dayNames[d]}</label>`;
+                }
+                html += `</div>
+
              ${renderRelayMask('sched', i, s.m)}
           </div>`;
             });
@@ -1094,7 +1139,8 @@
         function addSched() {
             if (schedules.length >= maxCh) { alert("Max " + maxCh + " schedules allowed!"); return; }
 
-            schedules.push({ sH: 18, sM: 0, eH: 22, eM: 0, m: 0, on: 1 });
+            // Default to All Days (127)
+            schedules.push({ sH: 18, sM: 0, eH: 22, eM: 0, m: 0, on: 1, d: 127 });
             renderSchedules();
         }
 
@@ -1109,6 +1155,17 @@
         function updS(i, type, val) {
             if (type === 'on') schedules[i].on = val ? 1 : 0;
             else if (type === 'mask') schedules[i].m = val;
+            else if (type.startsWith('d')) {
+                let bit = parseInt(type.substring(1));
+                if (schedules[i].d === undefined) schedules[i].d = 127;
+                if (val) schedules[i].d |= (1 << bit);
+                else schedules[i].d &= ~(1 << bit);
+
+                // AUTO-DEACTIVATE: If no days selected, switch off schedule
+                if (schedules[i].d === 0) {
+                    schedules[i].on = 0;
+                }
+            }
             else if (type === 's' || type === 'e') {
                 let parts = val.split(':');
                 if (parts.length < 2) return;
@@ -1123,11 +1180,32 @@
         function saveAllSchedules(silent) {
             if (devInfo.expired) { alert("License Expired."); return; }
 
-            // FIXED: Using "schedGlobal" key to match ESP32 code
             let master = document.getElementById('schedMaster').checked;
             globalSchedActive = master; // Optimistic update
 
-            // FIXED: RE-RENDER TO UPDATE MESSAGE INSTANTLY
+            // Validation: Every enabled schedule MUST have switches and days
+            if (master) {
+                for (let i = 0; i < schedules.length; i++) {
+                    let s = schedules[i];
+                    if (s.on) {
+                        if (s.m === 0) {
+                            if (!silent) alert("Schedule #" + (i + 1) + " has no switches selected!");
+                            return;
+                        }
+                        if (s.d === 0 || s.d === undefined) {
+                            if (!silent) alert("Schedule #" + (i + 1) + " has no days selected!");
+                            renderSchedules();
+                            return;
+                        }
+                        if (s.sH === s.eH && s.sM === s.eM) {
+                            if (!silent) alert("Schedule #" + (i + 1) + " start and end times are identical!");
+                            return;
+                        }
+                    }
+                }
+            }
+
+            // RE-RENDER TO UPDATE MESSAGE INSTANTLY
             renderSchedules();
 
             let payloads = [];
@@ -1136,9 +1214,7 @@
             for (let i = 0; i < maxCh; i++) {
                 if (i < schedules.length) {
                     let s = schedules[i];
-                    // Only validate if Global Schedule is ACTIVE
-                    if (master && s.on && s.m === 0 && !silent) { alert("Schedule #" + (i + 1) + " has no switches selected!"); return; }
-                    payloads.push({ "schedSave": { "i": i, "sH": s.sH, "sM": s.sM, "eH": s.eH, "eM": s.eM, "m": s.m, "on": s.on ? 1 : 0 } });
+                    payloads.push({ "schedSave": { "i": i, "sH": s.sH, "sM": s.sM, "eH": s.eH, "eM": s.eM, "m": s.m, "on": s.on ? 1 : 0, "d": s.d === undefined ? 127 : s.d } });
                 } else {
                     payloads.push({ "schedDel": i });
                 }
