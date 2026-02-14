@@ -7,7 +7,7 @@
             "chipFamily": "ESP32",
             "parts": [
                 {
-                    "path": "Wi_Fi_Control_Switch_Multi_Config_Light.ino.merged.bin",
+                    "path": "Wi_Fi_Control_Switch_Multi_Config_Light_Sched_Days.ino.merged.bin",
                     "offset": 0
                 }
             ]
@@ -15,5 +15,6 @@
     ]
 
 }
+
 
 
