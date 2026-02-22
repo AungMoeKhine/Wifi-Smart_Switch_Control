@@ -63,17 +63,26 @@
             box-sizing: border-box;
             font-size: 1.2rem;
             border: none;
-            border-radius: 12px;
+            border-radius: 16px;
             cursor: pointer;
             color: white;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: flex-start;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
             padding: 10px 4px;
             overflow: hidden;
+            transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
             position: relative;
+        }
+
+        .relay-btn::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            border-radius: 16px;
+            pointer-events: none;
+            box-shadow: inset 0 2px 4px rgba(255,255,255,0.3), inset 0 -3px 6px rgba(0,0,0,0.2);
         }
 
         @media (min-width: 480px) {
@@ -84,18 +93,22 @@
         }
 
         .relay-btn:active {
-            transform: scale(0.96) translateY(4px);
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-            transition: none;
+            transform: translateY(4px) scale(0.98);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .relay-btn:active::before {
+            box-shadow: inset 0 4px 8px rgba(0,0,0,0.3), inset 0 -1px 2px rgba(255,255,255,0.2);
         }
 
         .btn-on {
-            background: var(--success);
+            background: linear-gradient(145deg, #34c759, #28a745);
+            box-shadow: 0 6px 12px rgba(40, 167, 69, 0.4), 0 2px 4px rgba(0,0,0,0.1);
         }
 
         .btn-off {
-            background: var(--danger);
-            opacity: 0.9;
+            background: linear-gradient(145deg, #ff4d4f, #dc3545);
+            box-shadow: 0 6px 12px rgba(220, 53, 69, 0.3), 0 2px 4px rgba(0,0,0,0.1);
         }
 
         .btn-label {
@@ -109,17 +122,22 @@
             justify-content: center;
             margin-bottom: 8px;
             word-wrap: break-word;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
         }
 
         .status-badge {
             font-size: 0.75rem;
-            font-weight: 500;
-            background: rgba(0, 0, 0, 0.25);
-            padding: 3px 10px;
-            border-radius: 12px;
+            font-weight: normal;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 4px 12px;
+            border-radius: 20px;
             display: inline-flex;
             align-items: center;
             gap: 4px;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.1);
+            backdrop-filter: blur(4px);
+            letter-spacing: 0.5px;
         }
 
         .timer-display {
